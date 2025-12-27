@@ -2,385 +2,454 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JDM Insight Lab</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>JDM Insight Lab v3.0</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root {
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
-            --input-bg: #2c2c2c;
+        :root { 
+            --primary-color: #2c3e50; 
+            --accent-color: #4CAF50; /* 인사이트 랩은 녹색 테마 */
+            --bg-color: #121212; /* 다크 모드 배경 */
+            --card-bg: #1e1e1e; 
             --text-main: #e0e0e0;
             --text-sub: #a0a0a0;
-            --accent: #4CAF50;
-            --border: #333;
-        }
-
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0; /* 헤더를 위해 패딩 제거 */
-            box-sizing: border-box;
-            line-height: 1.6;
-        }
-
-        /* 1. 상단 타이틀바 (버전 확인용) */
-        header {
-            background-color: #000;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .app-title { font-size: 1.1rem; font-weight: bold; color: #fff; }
-        .version-badge { background: var(--accent); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
-
-        /* 메인 컨테이너 */
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 15px;
-            display: grid;
-            grid-template-columns: 380px 1fr; /* PC: 좌우 분할 */
-            gap: 25px;
-            align-items: start;
-        }
-
-        /* --- 모바일 전용 스타일 (겹침 해결 핵심) --- */
-        @media (max-width: 900px) {
-            .container {
-                display: flex;
-                flex-direction: column; /* 세로 배치 */
-                gap: 30px;
-                margin-top: 10px;
-            }
-
-            .input-panel {
-                position: static !important; /* 고정 해제 (겹침 방지) */
-                width: 100%;
-                z-index: 1;
-            }
-
-            .view-panel {
-                width: 100%;
-                z-index: 1;
-            }
-            
-            #inputResponse { height: 200px; } /* 모바일 높이 조정 */
-        }
-
-        /* 입력 패널 */
-        .input-panel {
-            background-color: var(--panel-bg);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            /* PC에서만 고정 */
-            position: sticky;
-            top: 80px; 
-        }
-
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; color: var(--accent); margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
-        
-        input[type="text"], input[type="date"], textarea {
-            width: 100%;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border);
-            color: #fff;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 16px; 
-            box-sizing: border-box;
-            font-family: 'Pretendard', sans-serif;
-        }
-
-        /* 날짜 입력창 스타일 */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1); /* 달력 아이콘 흰색으로 */
-            cursor: pointer;
+            --border-color: #333;
+            --nav-height: 65px; 
+            --holiday-color: #e74c3c; 
+            --sat-color: #3498db; 
         }
         
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); background-color: #363636; }
-        #inputContext { height: 60px; resize: none; }
-        #inputResponse { height: 400px; font-family: 'Consolas', monospace; resize: vertical; line-height: 1.5;}
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding-bottom: var(--nav-height); box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: border-box; }
 
-        .btn-save {
-            width: 100%; padding: 14px; background-color: var(--accent); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
-
-        /* 뷰어 패널 */
-        .view-panel { display: flex; flex-direction: column; gap: 20px; }
-
-        /* 탭 버튼 */
-        .tabs { display: flex; gap: 10px; }
-        .tab-btn {
-            flex: 1; background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-sub);
-            padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center;
-        }
-        .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-        /* 캘린더 */
-        .calendar-wrapper {
-            background-color: var(--panel-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border);
-        }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .calendar-header button { background: none; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 4px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
-        .cal-day-name { color: var(--text-sub); font-size: 0.8rem; padding-bottom: 5px; }
-        .cal-date {
-            background-color: #252525; min-height: 50px; border-radius: 4px; padding: 4px;
-            display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative;
-        }
-        .cal-date.today { border: 1px solid var(--accent); }
-        .cal-date.active-filter { background-color: rgba(76, 175, 80, 0.3); border: 1px solid var(--accent); }
-        .date-num { font-size: 0.8rem; margin-bottom: 2px; }
-        .dot-container { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap;}
-        .dot { width: 4px; height: 4px; background-color: var(--accent); border-radius: 50%; }
-
-        /* 리스트 카드 */
-        .insight-card {
-            background-color: var(--panel-bg); border-radius: 12px; border: 1px solid var(--border);
-            padding: 20px; margin-bottom: 20px;
-        }
-        .card-header { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; }
-        .card-context { font-size: 1.1rem; font-weight: bold; color: #fff; }
-        .card-date { font-size: 0.9rem; color: var(--accent); font-weight: bold; } /* 날짜 강조 */
+        /* 상단 헤더 */
+        header { background: #000; padding: 15px 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; color: #fff; }
+        .version-badge { background: var(--accent-color); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
         
-        .card-body { color: #ddd; font-size: 0.95rem; line-height: 1.6; overflow-x: auto; }
-        .card-body h1, .card-body h2 { border-bottom: none; margin-top: 15px; color: #fff; font-size: 1.1em; }
-        .card-body code { background: #333; padding: 2px 5px; color: #ff9800; border-radius: 3px; font-family: monospace;}
-        .card-body pre { background: #111; padding: 10px; border-radius: 6px; overflow-x: auto; margin: 10px 0;}
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; } .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 로그인 오버레이 */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        #loginOverlay input { width: 220px; padding: 15px; font-size: 1.5rem; text-align: center; border-radius: 12px; border: 1px solid #333; background: #222; color: white; margin-top: 10px; letter-spacing: 5px; }
+        #loginOverlay button { margin-top: 20px; padding: 12px 40px; background: var(--accent-color); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
 
-        .card-tags { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; display: flex; flex-wrap: wrap; gap: 8px; }
-        .tag { font-size: 0.75rem; background-color: #2c2c2c; color: var(--accent); padding: 4px 8px; border-radius: 4px; border: 1px solid #444; }
-        .btn-delete { background: none; border: none; color: #666; cursor: pointer; margin-left: auto; font-size: 0.8rem; }
+        /* 달력 스타일 */
+        .calendar-wrapper { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); width: 100%; }
+        .day-header { text-align: center; font-size: 0.9rem; color: var(--text-sub); padding: 12px 0; font-weight: 600; border-bottom: 1px solid var(--border-color); }
+        .day-header.sun { color: var(--holiday-color); }
+        .day-header.sat { color: var(--sat-color); }
+        
+        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; font-size: 0.95rem; cursor: pointer; padding-top: 6px; border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); position: relative; color: var(--text-main); }
+        .cal-day:nth-child(7n) { border-right: none; }
+        .cal-day:hover { background: #252525; }
+        .cal-day.today { border: 1px solid var(--accent-color); }
+        .cal-day.today .day-num { background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.85rem; }
+        .cal-day.active-select { background: rgba(76, 175, 80, 0.2); }
+        
+        .day-num { margin-bottom: 2px; }
+        .dot { width: 6px; height: 6px; background: var(--accent-color); border-radius: 50%; margin-top: 4px; display: block; }
+        .cal-events-pc { display: none; width: 100%; margin-top: 2px; padding: 0 2px; box-sizing: border-box; }
+        
+        @media (min-width: 768px) {
+            .cal-day { aspect-ratio: auto; min-height: 120px; height: 100%; align-items: flex-start; padding: 8px; }
+            .dot { display: none; } .cal-events-pc { display: block; }
+            .cal-event-item { font-size: 0.8rem; background: #2c2c2c; color: #ddd; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; border-left: 3px solid var(--accent-color); }
+            .more-items { font-size: 0.75rem; color: #888; text-align: right; padding-right: 5px; }
+        }
+
+        /* 카드 스타일 */
+        .memo-card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); cursor: pointer; }
+        .memo-card h3 { margin: 0 0 10px 0; color: #fff; font-size: 1.1rem; }
+        .memo-card p { color: #aaa; font-size: 0.9rem; margin: 0; line-height: 1.5; }
+        
+        /* 입력 폼 스타일 */
+        input, select, textarea { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 1rem; background: #2c2c2c; color: #fff; font-family: 'Pretendard', sans-serif; }
+        textarea { min-height: 300px; line-height: 1.6; resize: vertical; font-family: 'Consolas', monospace; }
+        input:focus, textarea:focus { border-color: var(--accent-color); outline: none; }
+        
+        .btn-save { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+
+        /* 태그 스타일 */
+        .tag-select-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .tag-chip-btn { padding: 6px 12px; border-radius: 20px; border: 1px solid #444; background: #2c2c2c; color: #aaa; font-size: 0.9rem; cursor: pointer; }
+        .tag-chip-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        .card-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+        .mini-tag { font-size: 0.75rem; background: #333; color: var(--accent-color); padding: 2px 8px; border-radius: 12px; border: 1px solid #444; }
+
+        /* 뷰어 모달 (마크다운) */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card-bg); width:95%; max-width:800px; padding:30px; border-radius: 16px; max-height:85vh; overflow-y:auto; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .view-body { color: #ddd; line-height: 1.7; font-size: 1rem; }
+        .view-body code { background: #333; padding: 2px 5px; border-radius: 4px; color: #ff9800; font-family: monospace; }
+        .view-body pre { background: #111; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 15px 0; }
+        .view-body blockquote { border-left: 4px solid var(--accent-color); margin: 0; padding-left: 15px; color: #888; }
+        .view-body img { max-width: 100%; border-radius: 8px; }
+
+        /* 하단 내비게이션 */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height); background: #1e1e1e; display: flex; border-top: 1px solid #333; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; text-align: center; padding: 10px; color: #666; font-size: 0.75rem; cursor: pointer; }
+        .nav-item.active { color: var(--accent-color); font-weight: bold; }
+        .nav-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+        
+        /* 유틸리티 */
+        .search-bar-area { display: flex; gap: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
+<div id="loginOverlay">
+    <form onsubmit="event.preventDefault(); checkPass();" style="text-align:center;">
+        <h2 style="color:var(--accent-color);">🧪 JDM Insight Lab</h2>
+        <p style="color:#888;">Access Verification</p>
+        <input type="password" id="passInput" maxlength="4" placeholder="****">
+        <br>
+        <button type="submit">ENTER</button>
+    </form>
+</div>
+
 <header>
-    <div class="app-title">🧪 Insight Lab <span class="version-badge">v2.2</span></div>
+    <h1>JDM Insight Lab <span class="version-badge">v3.0</span></h1>
+    <button onclick="changePassword()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#666;">🔒</button>
 </header>
 
 <div class="container">
     
-    <div class="input-panel">
-        <div class="input-group">
-            <label>1. Date (날짜 선택)</label>
-            <input type="date" id="inputDate">
+    <div id="tab-calendar" class="tab-content active">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid var(--border-color);">
+            <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:1.5rem; cursor:pointer; color:var(--text-main);">◀</button>
+            <h2 id="currentMonth" style="margin:0; font-size:1.3rem; color:#fff;"></h2>
+            <button onclick="changeMonth(1)" style="border:none; background:none; font-size:1.5rem; cursor:pointer; color:var(--text-main);">▶</button>
         </div>
-        <div class="input-group">
-            <label>2. Context (질문 의도)</label>
-            <textarea id="inputContext" placeholder="질문의 맥락을 짧게 기록하세요"></textarea>
+        <div class="calendar-wrapper">
+            <div id="calendarGrid" class="calendar-grid"></div>
         </div>
-        <div class="input-group">
-            <label>3. Gemini Response (답변)</label>
-            <textarea id="inputResponse" placeholder="내용 붙여넣기..."></textarea>
-        </div>
-        <div class="input-group">
-            <label>4. Tags (태그)</label>
-            <input type="text" id="inputTags" placeholder="#태그1 #태그2">
-        </div>
-        <button class="btn-save" onclick="saveInsight()">💾 저장하기</button>
+        <div id="calendarMemos" style="margin-top:20px;"></div>
     </div>
 
-    <div class="view-panel">
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('calendar')">📅 캘린더</button>
-            <button class="tab-btn" onclick="switchTab('list')">📝 전체 목록</button>
+    <div id="tab-list" class="tab-content">
+        <div class="search-bar-area">
+            <input type="text" id="searchInput" placeholder="검색 (키워드, 태그)" onkeyup="renderMemos()">
         </div>
+        <div id="memoList"></div>
+    </div>
 
-        <div id="calendarView" class="calendar-wrapper">
-            <div class="calendar-header">
-                <button onclick="changeMonth(-1)">◀</button>
-                <h3 id="currentMonthLabel" style="margin:0; color:#fff;"></h3>
-                <button onclick="changeMonth(1)">▶</button>
+    <div id="tab-write" class="tab-content">
+        <div style="background:var(--card-bg); padding:20px; border-radius:16px; border:1px solid var(--border-color);">
+            <h3 style="margin-top:0; color:var(--accent-color);">✏️ 새 인사이트 기록</h3>
+            
+            <label style="color:var(--text-sub); font-size:0.9rem;">Date (날짜)</label>
+            <input type="date" id="inputDate">
+
+            <label style="color:var(--text-sub); font-size:0.9rem;">Context (질문 의도 & 맥락)</label>
+            <input type="text" id="inputContext" placeholder="왜 이 질문을 했나요? (제목 역할)">
+
+            <label style="color:var(--text-sub); font-size:0.9rem;">Gemini Response (AI 답변)</label>
+            <textarea id="inputResponse" placeholder="워드/한글에서 복사한 텍스트를 여기에 붙여넣으세요. (마크다운 지원)"></textarea>
+            
+            <label style="color:var(--text-sub); font-size:0.9rem;">Tags (태그 선택)</label>
+            <div id="inputTagContainer" class="tag-select-container"></div>
+            
+            <button class="btn-save" onclick="saveNewMemo()">💾 저 장 하 기</button>
+        </div>
+    </div>
+
+    <div id="tab-data" class="tab-content">
+        <div style="background:var(--card-bg); padding:25px; border-radius:16px; text-align:center; border:1px solid var(--border-color);">
+            <h3>💾 데이터 센터</h3>
+            <div style="background:#2c2c2c; padding:20px; border-radius:12px; margin-bottom:20px; text-align:left;">
+                <strong style="color:#f39c12;">📂 백업 파일로 복원</strong>
+                <input type="file" id="restoreInput" onchange="restoreData(this)" style="margin-top:10px;">
             </div>
-            <div class="calendar-grid" id="calendarGrid"></div>
+            <button onclick="backupData()" class="btn-save" style="background:#27ae60; margin-bottom:12px;">📤 전체 백업 (Backup)</button>
+            <button onclick="resetApp()" class="btn-save" style="background:#c0392b;">⚠️ 앱 초기화</button>
         </div>
-
-        <div id="cardList" class="card-list"></div>
     </div>
 </div>
 
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:15px;">
+            <div>
+                <div id="viewTagList" style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:5px;"></div>
+                <span id="viewDate" style="color:var(--accent-color); font-weight:bold;"></span>
+            </div>
+            <button onclick="closeViewModal()" style="background:none; border:none; color:#666; font-size:2rem; cursor:pointer;">×</button>
+        </div>
+        <h2 id="viewTitle" style="color:#fff; margin-top:0;"></h2>
+        <div id="viewBody" class="view-body"></div>
+        
+        <div style="margin-top:30px; display:flex; gap:10px;">
+            <button onclick="deleteFromView()" style="flex:1; padding:10px; background:#c0392b; color:white; border:none; border-radius:8px; cursor:pointer;">삭제</button>
+            <button onclick="closeViewModal()" style="flex:2; padding:10px; background:#444; color:white; border:none; border-radius:8px; cursor:pointer;">닫기</button>
+        </div>
+        <input type="hidden" id="viewIdHidden">
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('calendar')"><span class="nav-icon">📅</span>홈</div>
+    <div class="nav-item" onclick="switchTab('list')"><span class="nav-icon">📋</span>목록</div>
+    <div class="nav-item" onclick="switchTab('write')"><span class="nav-icon">✏️</span>기록</div>
+    <div class="nav-item" onclick="switchTab('data')"><span class="nav-icon">💾</span>데이터</div>
+</nav>
+
 <script>
-    const STORAGE_KEY = 'jdm_insight_lab_v1';
-    let insights = [];
-    let currentDate = new Date();
+    // --- 설정 및 DB 초기화 ---
+    const DB_NAME = 'JDMInsightDB_v3'; // 아카이브와 DB 분리
+    const STORE_NAME = 'insights';
+    let db;
+    let currDate = new Date();
+    // 기본 태그셋
+    let myTags = JSON.parse(localStorage.getItem('insightTags')) || ['#건설실무', '#철학', '#코딩', '#음악', '#개인사'];
+    let inputSelectedTags = new Set();
 
-    window.onload = function() {
-        // 오늘 날짜로 입력창 초기화
-        document.getElementById('inputDate').valueAsDate = new Date();
+    // 비밀번호 로직
+    function getPassword() { return localStorage.getItem('appPass') || "0403"; }
+    function checkPass() {
+        if(document.getElementById('passInput').value === getPassword()) {
+            document.getElementById('loginOverlay').style.display = 'none';
+        } else { alert('비밀번호가 틀렸습니다.'); document.getElementById('passInput').value=''; }
+    }
+    function changePassword() {
+        const cur = prompt("현재 비밀번호:"); if(cur!==getPassword()) return alert("틀렸습니다.");
+        const newP = prompt("새 비밀번호:"); if(newP) { localStorage.setItem('appPass', newP); alert("변경 완료."); }
+    }
 
-        const savedData = localStorage.getItem(STORAGE_KEY);
-        if (savedData) insights = JSON.parse(savedData);
-        renderCalendar();
-        switchTab('calendar');
-    };
+    // DB 연결
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = e => { db = e.target.result; if(!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, {keyPath:'id'}); };
+    request.onsuccess = e => { db = e.target.result; initApp(); };
 
-    function saveInsight() {
-        const dateInput = document.getElementById('inputDate').value; // 사용자가 선택한 날짜 (YYYY-MM-DD)
+    function initApp() { 
+        document.getElementById('inputDate').value = new Date().toISOString().substring(0, 10);
+        renderTagSelector();
+        renderCalendar(); 
+        renderMemos(); 
+    }
+
+    // --- 탭 전환 ---
+    function switchTab(tab) {
+        window.scrollTo(0, 0); 
+        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+        document.getElementById('tab-'+tab).classList.add('active');
+        const tabs = ['calendar','list','write','data'];
+        document.querySelectorAll('.nav-item')[tabs.indexOf(tab)].classList.add('active');
+        
+        if(tab === 'list') renderMemos();
+        if(tab === 'calendar') { currDate = new Date(); renderCalendar(); }
+    }
+
+    // --- 태그 관리 ---
+    function renderTagSelector() {
+        const container = document.getElementById('inputTagContainer');
+        container.innerHTML = '';
+        myTags.forEach(tag => {
+            const btn = document.createElement('span');
+            btn.className = 'tag-chip-btn' + (inputSelectedTags.has(tag) ? ' active' : '');
+            btn.innerText = tag;
+            btn.onclick = () => {
+                if(inputSelectedTags.has(tag)) inputSelectedTags.delete(tag); else inputSelectedTags.add(tag);
+                renderTagSelector();
+            };
+            container.appendChild(btn);
+        });
+        // 태그 추가 버튼
+        const addBtn = document.createElement('span');
+        addBtn.className = 'tag-chip-btn';
+        addBtn.innerText = '+ 추가';
+        addBtn.style.color = '#fff';
+        addBtn.onclick = () => {
+            const newTag = prompt("새 태그 이름 (#포함):");
+            if(newTag) { myTags.push(newTag); localStorage.setItem('insightTags', JSON.stringify(myTags)); renderTagSelector(); }
+        };
+        container.appendChild(addBtn);
+    }
+
+    // --- 저장 로직 ---
+    function saveNewMemo() {
+        const dateVal = document.getElementById('inputDate').value;
         const context = document.getElementById('inputContext').value.trim();
         const response = document.getElementById('inputResponse').value.trim();
-        const tagsInput = document.getElementById('inputTags').value.trim();
+        const tags = Array.from(inputSelectedTags);
 
-        if (!dateInput) { alert('날짜를 선택해주세요.'); return; }
-        if (!context || !response) { alert('내용을 입력해주세요.'); return; }
-
-        const tags = tagsInput.split(/[\s,]+/).filter(t => t.length > 0).map(t => t.startsWith('#') ? t : '#' + t);
+        if(!context || !response) return alert('맥락과 답변을 모두 입력해주세요.');
         
-        // 날짜 포맷팅 (YYYY. MM. DD)
-        const dateParts = dateInput.split('-');
-        const displayDate = `${dateParts[0]}. ${dateParts[1]}. ${dateParts[2]}`;
-
-        const newInsight = {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).add({
             id: Date.now(),
-            date: dateInput, // 데이터 필터링용 (YYYY-MM-DD)
-            displayDate: displayDate, // 화면 표시용
-            context: context,
-            response: response,
+            dateStr: dateVal, // YYYY-MM-DD
+            title: context,   // 제목 필드에 질문(맥락) 저장
+            content: response, // 내용 필드에 AI 답변 저장
             tags: tags
-        };
-
-        insights.unshift(newInsight); // 최신순 저장
-        // 날짜순으로 재정렬 (과거 날짜 입력 시 순서 꼬임 방지)
-        insights.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(insights));
-
-        // 입력창 리셋
-        document.getElementById('inputContext').value = '';
-        document.getElementById('inputResponse').value = '';
-        document.getElementById('inputTags').value = '';
-        // 날짜는 리셋하지 않고 그대로 둠 (연속 입력 편의성)
-        
-        renderCalendar();
-        renderCards(insights);
-        alert('저장되었습니다.');
-        switchTab('list');
-    }
-
-    function deleteInsight(id) {
-        if(confirm('삭제하시겠습니까?')) {
-            insights = insights.filter(item => item.id !== id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(insights));
-            renderCalendar();
-            renderCards(insights);
-        }
-    }
-
-    function renderCalendar() {
-        const grid = document.getElementById('calendarGrid');
-        grid.innerHTML = '';
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        document.getElementById('currentMonthLabel').innerText = `${year}. ${month + 1}`;
-
-        const days = ['일', '월', '화', '수', '목', '금', '토'];
-        days.forEach(d => {
-            const div = document.createElement('div');
-            div.className = 'cal-day-name'; div.innerText = d; grid.appendChild(div);
         });
 
-        const firstDay = new Date(year, month, 1).getDay();
-        const lastDate = new Date(year, month + 1, 0).getDate();
+        tx.oncomplete = () => {
+            alert('저장되었습니다!');
+            document.getElementById('inputContext').value = "";
+            document.getElementById('inputResponse').value = "";
+            inputSelectedTags.clear();
+            renderTagSelector();
+            switchTab('calendar');
+        };
+    }
 
-        for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+    // --- 캘린더 렌더링 ---
+    async function renderCalendar() {
+        const y = currDate.getFullYear(), m = currDate.getMonth();
+        document.getElementById('currentMonth').innerText = `${y}. ${m+1}`;
+        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+        
+        const days = ['일','월','화','수','목','금','토'];
+        days.forEach((d, i) => {
+            grid.innerHTML += `<div class="day-header ${i===0?'sun':''} ${i===6?'sat':''}">${d}</div>`;
+        });
 
-        for (let d = 1; d <= lastDate; d++) {
-            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const cell = document.createElement('div');
-            cell.className = 'cal-date';
+        const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+        for(let i=0; i<first; i++) grid.innerHTML += `<div></div>`;
+        
+        const memos = await getAll();
+        
+        for(let d=1; d<=last; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayMemos = memos.filter(m => m.dateStr === dateStr);
             
-            // 오늘 날짜 표시
-            const todayStr = new Date().toISOString().split('T')[0];
-            if (dateStr === todayStr) cell.classList.add('today');
+            const div = document.createElement('div');
+            div.className = 'cal-day';
+            if(dateStr === new Date().toISOString().substring(0,10)) div.classList.add('today');
+            
+            // 모바일용 점
+            const dotHtml = dayMemos.length > 0 ? `<div class="dot"></div>` : '';
+            // PC용 제목 리스트
+            let pcEvents = '';
+            dayMemos.slice(0,3).forEach(m => {
+                pcEvents += `<div class="cal-event-item">${m.title}</div>`;
+            });
+            if(dayMemos.length > 3) pcEvents += `<div class="more-items">+${dayMemos.length-3}</div>`;
 
-            cell.innerHTML = `<span class="date-num">${d}</span>`;
-
-            const count = insights.filter(item => item.date === dateStr).length;
-            if (count > 0) {
-                const dotContainer = document.createElement('div');
-                dotContainer.className = 'dot-container';
-                for(let k=0; k<Math.min(count, 4); k++) {
-                    const dot = document.createElement('div'); dot.className = 'dot'; dotContainer.appendChild(dot);
-                }
-                cell.appendChild(dotContainer);
-            }
-            cell.onclick = () => filterByDate(dateStr, cell);
-            grid.appendChild(cell);
+            div.innerHTML = `<span class="day-num">${d}</span>${dotHtml}<div class="cal-events-pc">${pcEvents}</div>`;
+            div.onclick = () => showDayMemos(dateStr, dayMemos);
+            grid.appendChild(div);
         }
+        document.getElementById('calendarMemos').innerHTML = ''; // 초기화
     }
 
-    function changeMonth(delta) {
-        currentDate.setMonth(currentDate.getMonth() + delta);
-        renderCalendar();
-    }
-
-    function filterByDate(dateStr, cellElement) {
-        document.querySelectorAll('.cal-date').forEach(el => el.classList.remove('active-filter'));
-        if(cellElement) cellElement.classList.add('active-filter');
-        const filtered = insights.filter(item => item.date === dateStr);
-        renderCards(filtered);
-        switchTab('list');
-    }
-
-    function renderCards(data) {
-        const container = document.getElementById('cardList');
-        container.innerHTML = '';
-        if (data.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">기록이 없습니다.</div>';
+    // 캘린더 날짜 클릭 시 하단 목록 표시
+    function showDayMemos(dateStr, memos) {
+        const box = document.getElementById('calendarMemos');
+        if(memos.length === 0) {
+            // 데이터 없으면 바로 입력창으로 날짜 넘기기
+            if(confirm('이 날짜에 기록을 추가하시겠습니까?')) {
+                document.getElementById('inputDate').value = dateStr;
+                switchTab('write');
+            }
             return;
         }
-        data.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'insight-card';
-            const parsedContent = marked.parse(item.response);
-            const tagsHtml = item.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
 
-            card.innerHTML = `
-                <div class="card-header">
-                    <div class="card-context">Q. ${item.context}</div>
-                    <div class="card-date">📅 ${item.displayDate}</div>
+        let html = `<div style="background:var(--card-bg); padding:15px; border-radius:12px; border:1px solid var(--border-color);">
+            <h3 style="margin:0 0 15px 0; color:#fff;">📅 ${dateStr} 기록 (${memos.length})</h3>`;
+        
+        memos.forEach(m => {
+            const tags = (m.tags||[]).map(t => `<span class="mini-tag">${t}</span>`).join(' ');
+            html += `<div onclick="openViewModal(${m.id})" style="padding:12px; border-bottom:1px solid #333; cursor:pointer;">
+                <div style="font-weight:bold; color:#fff; margin-bottom:5px;">Q. ${m.title}</div>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888;">
+                    <span>${tags}</span>
+                    <span>더보기 ></span>
                 </div>
-                <div class="card-body">${parsedContent}</div>
-                <div class="card-tags">
-                    ${tagsHtml}
-                    <button class="btn-delete" onclick="deleteInsight(${item.id})">🗑️ 삭제</button>
+            </div>`;
+        });
+        html += `</div>`;
+        box.innerHTML = html;
+        // 스크롤 이동
+        box.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- 목록 렌더링 ---
+    async function renderMemos() {
+        const list = document.getElementById('memoList'); list.innerHTML = '';
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+        let memos = await getAll();
+        memos.sort((a,b) => b.dateStr.localeCompare(a.dateStr)); // 최신순
+
+        memos.forEach(m => {
+            if(keyword && !m.title.toLowerCase().includes(keyword) && !(m.tags||[]).join('').toLowerCase().includes(keyword)) return;
+            
+            const tagsHtml = (m.tags||[]).map(t => `<span class="mini-tag">${t}</span>`).join(' ');
+            list.innerHTML += `
+            <div class="memo-card" onclick="openViewModal(${m.id})">
+                <div style="display:flex; justify-content:space-between; color:#888; font-size:0.8rem; margin-bottom:8px;">
+                    <span>${m.dateStr}</span>
+                    <div class="card-tags">${tagsHtml}</div>
                 </div>
-            `;
-            container.appendChild(card);
+                <h3>Q. ${m.title}</h3>
+                <p>${m.content.substring(0, 60)}...</p>
+            </div>`;
         });
     }
 
-    function switchTab(tabName) {
-        const calView = document.getElementById('calendarView');
-        const listView = document.getElementById('cardList');
-        const btns = document.querySelectorAll('.tab-btn');
+    // --- 뷰어 (마크다운) ---
+    async function openViewModal(id) {
+        const m = await new Promise(r => db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = e => r(e.target.result));
+        if(!m) return;
         
-        btns.forEach(b => b.classList.remove('active'));
-
-        if (tabName === 'calendar') {
-            calView.style.display = 'block';
-            listView.style.display = 'none';
-            btns[0].classList.add('active');
-        } else {
-            calView.style.display = 'none';
-            listView.style.display = 'flex';
-            listView.style.flexDirection = 'column';
-            btns[1].classList.add('active');
-            if(tabName === 'list') renderCards(insights); // 전체 목록 다시 렌더링
-        }
+        document.getElementById('viewIdHidden').value = m.id;
+        document.getElementById('viewTitle').innerText = "Q. " + m.title;
+        document.getElementById('viewDate').innerText = m.dateStr;
+        
+        const tagsHtml = (m.tags||[]).map(t => `<span class="mini-tag">${t}</span>`).join(' ');
+        document.getElementById('viewTagList').innerHTML = tagsHtml;
+        
+        // 마크다운 변환
+        document.getElementById('viewBody').innerHTML = marked.parse(m.content);
+        document.getElementById('viewModal').style.display = 'flex';
     }
-</script>
+    function closeViewModal() { document.getElementById('viewModal').style.display = 'none'; }
 
+    function deleteFromView() {
+        if(!confirm('삭제하시겠습니까?')) return;
+        const id = Number(document.getElementById('viewIdHidden').value);
+        db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id).onsuccess = () => {
+            alert('삭제되었습니다.');
+            closeViewModal();
+            renderCalendar();
+            renderMemos();
+        };
+    }
+
+    // --- 유틸리티 ---
+    function getAll() { return new Promise(r => db.transaction(STORE_NAME,'readonly').objectStore(STORE_NAME).getAll().onsuccess = e => r(e.target.result)); }
+    
+    function backupData() { 
+        getAll().then(data => {
+            if(data.length==0) return alert('데이터 없음'); 
+            const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Insight_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }); 
+    }
+    function restoreData(input) { 
+        const file = input.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = JSON.parse(e.target.result);
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            data.forEach(item => tx.objectStore(STORE_NAME).put(item));
+            tx.oncomplete = () => { alert('복원 완료'); location.reload(); };
+        };
+        reader.readAsText(file);
+    }
+    function resetApp() { if(confirm('초기화하시겠습니까?')) { db.transaction(STORE_NAME,'readwrite').objectStore(STORE_NAME).clear().onsuccess=()=>{ location.reload(); }; } }
+</script>
 </body>
 </html>
