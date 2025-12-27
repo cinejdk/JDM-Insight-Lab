@@ -6,36 +6,35 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JDM Insight Lab v3.1</title>
+    <title>JDM Insight Lab v3.2</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        /* [테마 컬러] 인사이트 랩은 '초록색' 포인트 */
         :root { 
             --primary-color: #2c3e50; 
-            --accent-color: #4CAF50; /* 녹색 (Insight) */
+            --accent-color: #4CAF50; 
             --bg-color: #f0f2f5; 
             --card-bg: #ffffff; 
             --nav-height: 65px; 
             --holiday-color: #e74c3c; 
             --sat-color: #2980b9; 
         }
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg-color); color: #333; margin: 0; padding-bottom: var(--nav-height); -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg-color); color: #333; margin: 0; padding-bottom: var(--nav-height); box-sizing: border-box; }
         *, *:before, *:after { box-sizing: border-box; }
 
         header { background: var(--primary-color); padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; color: white; }
-        header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; flex-grow: 1; text-align: center; margin-left: 40px; letter-spacing: -0.5px; }
+        header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; flex-grow: 1; text-align: center; margin-left: 40px; }
         
         .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; } .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 로그인 오버레이 */
+        /* 로그인 */
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
         #loginOverlay input { width: 220px; padding: 15px; font-size: 1.5rem; text-align: center; border-radius: 12px; border: none; margin-top: 10px; letter-spacing: 5px; }
         #loginOverlay button { margin-top: 20px; padding: 12px 40px; background: var(--accent-color); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
 
-        /* 달력 스타일 (V13.10 동일) */
+        /* 캘린더 */
         .calendar-wrapper { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); width: 100%; }
         .day-header { text-align: center; font-size: 0.9rem; color: #555; padding: 12px 0; font-weight: 600; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0; }
@@ -43,13 +42,11 @@
         .day-header.sun { color: var(--holiday-color); }
         .day-header.sat { color: var(--sat-color); }
         
-        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; font-size: 0.95rem; cursor: pointer; padding-top: 6px; transition: background 0.2s; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; background: white; position: relative; }
+        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; font-size: 0.95rem; cursor: pointer; padding-top: 6px; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; background: white; position: relative; }
         .cal-day:nth-child(7n) { border-right: none; }
-        .cal-day:hover { background: #fafafa; }
-        .cal-day.today { background: #e8f5e9; } /* 오늘 날짜 배경 녹색 계열 */
+        .cal-day.today { background: #e8f5e9; }
         .cal-day.today .day-num { background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.85rem; }
         .cal-day.has-memo .day-num { font-weight: bold; text-decoration: underline; text-underline-offset: 3px; }
-        .cal-day.active-select { background: #fff0f0; box-shadow: inset 0 0 0 2px var(--accent-color); z-index: 10; }
         .day-num { margin-bottom: 2px; }
         .holiday-name { font-size: 0.7rem; color: var(--holiday-color); font-weight: bold; margin-bottom: 2px; text-align: center; word-break: keep-all; line-height: 1.1; }
         .cal-day.sun .day-num, .cal-day.holiday .day-num { color: var(--holiday-color); }
@@ -60,79 +57,84 @@
         @media (min-width: 768px) {
             .cal-day { aspect-ratio: auto; min-height: 130px; height: 100%; align-items: flex-start; padding: 8px; }
             .dot { display: none; } .cal-events-pc { display: block; }
-            .cal-event-item { font-size: 0.8rem; background: #f1f3f5; color: #495057; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; border-left: 3px solid var(--accent-color); cursor: pointer; transition: background 0.2s; }
-            .cal-event-item:hover { background: #e9ecef; color: #000; }
-            .more-items { font-size: 0.75rem; color: #888; text-align: right; padding-right: 5px; margin-top: 2px; }
+            .cal-event-item { font-size: 0.8rem; background: #f1f3f5; color: #495057; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; border-left: 3px solid var(--accent-color); cursor: pointer; }
+            .more-items { font-size: 0.75rem; color: #888; text-align: right; margin-top: 2px; }
         }
 
-        /* 메모 카드 (V13.10 동일) */
-        .memo-card { background: var(--card-bg); padding: 20px; border-radius: 16px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; border: 1px solid #eee; cursor: pointer; }
-        .memo-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        /* 카드 */
+        .memo-card { background: var(--card-bg); padding: 20px; border-radius: 16px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; cursor: pointer; }
         .memo-card.selected { border: 2px solid var(--accent-color); background: #f1f8e9; }
         .check-circle { position: absolute; top: 15px; right: 15px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ddd; background: white; display: none; }
         .memo-card.selection-mode .check-circle { display: block; }
         .memo-card.selected .check-circle { background: var(--accent-color); border-color: var(--accent-color); }
         .memo-card.selected .check-circle::after { content: '✔'; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; }
 
-        /* 입력 폼 스타일 */
+        /* 입력 폼 */
         input, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; background: #fff; }
-        
-        /* [중요] 텍스트에디터 대신 Textarea 사용 (마크다운용) */
         textarea.markdown-editor { width: 100%; min-height: 300px; padding: 14px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; font-family: 'Consolas', monospace; line-height: 1.6; resize: vertical; background: #fafafa; }
         textarea.markdown-editor:focus { border-color: var(--accent-color); outline: none; background: #fff; }
 
         .tag-select-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 5px 0; }
-        .tag-chip-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid #ddd; background: #f8f9fa; color: #555; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
-        .tag-chip-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tag-chip-btn.ghost { background: #fff0f0; color: #e74c3c; border: 1px dashed #e74c3c; opacity: 0.8; }
+        .tag-chip-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid #ddd; background: #f8f9fa; color: #555; font-size: 0.9rem; cursor: pointer; }
+        .tag-chip-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: bold; }
 
         .card-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-left: auto; justify-content: flex-end;}
         .mini-tag { font-size: 0.75rem; background: #e8f5e9; color: var(--accent-color); padding: 2px 8px; border-radius: 12px; font-weight: bold; border: 1px solid #c8e6c9; }
 
-        /* 링크 스타일 */
+        /* 링크 & 파일 첨부 */
         .link-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
         .link-row input { margin-bottom: 0; flex-grow: 1; }
         .btn-del-link { background: #e74c3c; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; flex-shrink: 0; }
         .btn-add-link { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; margin-bottom: 15px; display: inline-block; }
-
-        .btn-save { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
         
-        /* 검색바 영역 (V13.10 동일) */
+        .file-input-wrapper { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 10px; background: #fafafa; cursor: pointer; margin-bottom: 15px; transition: 0.2s; }
+        .file-input-wrapper:hover { border-color: var(--accent-color); background: #f1f8e9; }
+        .file-list-display { font-size: 0.9rem; color: #555; text-align: left; margin-top: 10px; }
+        
+        /* 버튼 */
+        .btn-save { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
         .search-bar-area { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-row { display: flex; gap: 5px; align-items: center; width: 100%; }
-        .search-row select { flex-grow: 1; margin-bottom: 0; }
-        .search-row input { flex-grow: 2; margin-bottom: 0; }
+        .search-row select, .search-row input { flex-grow: 1; margin-bottom: 0; }
         .icon-btn { background: #95a5a6; color: white; border: none; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; min-width: 45px; }
         .btn-select-mode { background: #2c3e50; }
-        .btn-select-mode.active { background: var(--accent-color); box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
+        .btn-select-mode.active { background: var(--accent-color); }
         .date-filter-row { display: flex; gap: 5px; align-items: center; }
-        .date-filter-row input[type="date"] { margin-bottom: 0; font-size: 0.9rem; padding: 8px; }
-
-        /* 벌크 삭제 바 */
-        #bulkDeleteBar { position: fixed; bottom: var(--nav-height); left: 0; width: 100%; background: #e74c3c; color: white; padding: 15px; text-align: center; font-weight: bold; cursor: pointer; display: none; z-index: 900; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         
-        /* 모달 공통 */
+        /* 뷰어 */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
-        .modal-content { background:white; width:90%; max-width:550px; padding:30px; border-radius:20px; max-height:85vh; overflow-y:auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-content { background:white; width:90%; max-width:600px; padding:30px; border-radius:20px; max-height:85vh; overflow-y:auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .close-btn { font-size: 2rem; border: none; background: none; cursor: pointer; color: #aaa; line-height: 1; margin-left: 10px;}
         
-        /* 태그 매니저 */
-        .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-        .tag-item { background: #f1f3f5; padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
-        .tag-del-btn { color: #e74c3c; font-weight: bold; cursor: pointer; margin-left: 5px; }
-        
-        /* 뷰어 바디 (마크다운) */
         .view-body { line-height: 1.7; font-size: 1.05rem; color: #333; }
         .view-body h1, .view-body h2 { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 20px; }
         .view-body code { background: #f1f1f1; padding: 2px 5px; border-radius: 4px; color: #e83e8c; font-family: monospace; }
         .view-body pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 15px 0; }
         .view-body blockquote { border-left: 4px solid var(--accent-color); margin: 0; padding-left: 15px; color: #777; background: #f9f9f9; }
+        
+        /* 첨부파일 뷰어 스타일 */
+        .attachment-section { margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; }
+        .attachment-label { font-size: 0.9rem; font-weight: bold; color: #666; margin-bottom: 10px; display: block; }
+        .attach-item { display: flex; align-items: center; gap: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; text-decoration: none; color: #333; transition: 0.2s; }
+        .attach-item:hover { background: #e8f5e9; border-color: #c8e6c9; }
+        .attach-icon { font-size: 1.2rem; }
+        .attach-name { font-weight: bold; font-size: 0.9rem; flex-grow: 1; word-break: break-all; }
+        
+        .img-preview-box { margin-top: 10px; text-align: center; background: #222; padding: 10px; border-radius: 8px; }
+        .img-preview-box img { max-width: 100%; border-radius: 4px; }
 
-        /* 하단 내비게이션 */
+        /* 하단 내비 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height); background: white; display: flex; border-top: 1px solid #eee; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; text-align: center; padding: 10px; color: #999; font-size: 0.75rem; cursor: pointer; }
         .nav-item.active { color: var(--accent-color); font-weight: bold; }
         .nav-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+        
+        #bulkDeleteBar { position: fixed; bottom: var(--nav-height); left: 0; width: 100%; background: #e74c3c; color: white; padding: 15px; text-align: center; font-weight: bold; cursor: pointer; display: none; z-index: 900; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        
+        /* 태그 매니저 */
+        .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .tag-item { background: #f1f3f5; padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+        .tag-del-btn { color: #e74c3c; font-weight: bold; cursor: pointer; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -147,7 +149,7 @@
 </div>
 
 <header>
-    <h1>JDM Insight Lab v3.1</h1>
+    <h1>JDM Insight Lab v3.2</h1>
     <button onclick="changePassword()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; padding:5px; color:rgba(255,255,255,0.8);">🔒</button>
 </header>
 
@@ -192,7 +194,7 @@
                 <button onclick="switchTab('calendar')" style="border:none; background:none; font-size:2rem; cursor:pointer; color:#aaa; line-height:1;">×</button>
             </div>
             
-            <label style="font-size:0.85rem; color:#666; font-weight:bold;">1. Context (질문 의도 & 맥락)</label>
+            <label style="font-size:0.85rem; color:#666; font-weight:bold;">1. Context (질문 의도)</label>
             <input type="text" id="inputTitle" placeholder="왜 이 질문을 했나요?">
             
             <div style="margin-bottom:12px;">
@@ -205,33 +207,40 @@
                 <div id="inputTagContainer" class="tag-select-container"></div>
             </div>
             
-            <label style="font-size:0.85rem; color:#666; font-weight:bold;">4. Gemini Response (AI 답변 붙여넣기)</label>
-            <textarea id="inputContent" class="markdown-editor" placeholder="워드/한글에서 복사한 텍스트를 여기에 붙여넣으세요. (Markdown 지원)"></textarea>
+            <label style="font-size:0.85rem; color:#666; font-weight:bold;">4. Gemini Response</label>
+            <textarea id="inputContent" class="markdown-editor" placeholder="답변을 여기에 붙여넣으세요. (Markdown 지원)"></textarea>
             
-            <label style="font-size:0.85rem; color:#666; font-weight:bold; display:block; margin-top:10px;">관련 링크</label>
+            <label style="font-size:0.85rem; color:#666; font-weight:bold; display:block; margin-top:15px;">관련 링크 (구글드라이브 등)</label>
             <div id="inputLinkContainer"></div>
             <button class="btn-add-link" onclick="addLinkField('inputLinkContainer')">+ 링크 추가</button>
 
-            <button class="btn-save" onclick="saveNewMemo()">💾 저 장 하 기</button>
+            <label style="font-size:0.85rem; color:#666; font-weight:bold; display:block; margin-top:15px;">📎 파일 첨부 (PDF/이미지)</label>
+            <div class="file-input-wrapper" onclick="document.getElementById('inputFile').click()">
+                <div style="font-size:2rem; color:#aaa;">☁️</div>
+                <div style="font-weight:bold; color:#555;">여기를 클릭하여 파일 선택</div>
+                <div style="font-size:0.8rem; color:#999;">대화 전체 PDF, 현장 사진 등 (10MB 이하 권장)</div>
+                <input type="file" id="inputFile" multiple style="display:none;" onchange="updateFileList(this)">
+            </div>
+            <div id="fileListDisplay" class="file-list-display"></div>
+
+            <button class="btn-save" style="margin-top:20px;" onclick="saveNewMemo()">💾 저 장 하 기</button>
         </div>
     </div>
 
     <div id="tab-data" class="tab-content">
         <div style="background:var(--card-bg); padding:25px; border-radius:16px; text-align:center; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
             <h3>💾 데이터 센터</h3>
-             <div style="background:#e8f5e9; padding:20px; border-radius:12px; margin-bottom:20px; border:2px solid var(--accent-color); text-align:left;">
+            <div style="background:#e8f5e9; padding:20px; border-radius:12px; margin-bottom:20px; border:2px solid var(--accent-color); text-align:left;">
                 <strong style="color:var(--primary-color);">📂 백업 파일로 복원</strong>
                 <input type="file" id="restoreInput" onchange="restoreData(this)" style="background:white; border:1px solid #ccc; width:100%; margin-top:10px;">
             </div>
-            <button onclick="backupData()" class="btn-save" style="background:#2980b9; margin-bottom:12px;">📤 전체 데이터 백업</button>
+            <button onclick="backupData()" class="btn-save" style="background:#2980b9; margin-bottom:12px;">📤 전체 백업</button>
             <button onclick="resetApp()" class="btn-save" style="background:#7f8c8d;">⚠️ 앱 초기화</button>
         </div>
     </div>
 </div>
 
-<div id="bulkDeleteBar" onclick="deleteSelectedMemos()">
-    🗑️ 선택한 항목 삭제하기 (<span id="selectedCount">0</span>)
-</div>
+<div id="bulkDeleteBar" onclick="deleteSelectedMemos()">🗑️ 선택 삭제 (<span id="selectedCount">0</span>)</div>
 
 <div id="tagManagerModal" class="modal">
     <div class="modal-content">
@@ -240,10 +249,7 @@
             <button class="close-btn" onclick="closeTagManager()">×</button>
         </div>
         <div id="tagListDisplay" class="tag-list"></div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="newTagInput" placeholder="#새태그" style="margin:0;">
-            <button class="btn-save" onclick="addNewTag()" style="padding:10px; width:auto;">추가</button>
-        </div>
+        <div style="display:flex; gap:5px;"><input type="text" id="newTagInput" placeholder="#새태그"><button class="btn-save" onclick="addNewTag()" style="padding:10px; width:auto;">추가</button></div>
     </div>
 </div>
 
@@ -262,7 +268,12 @@
         </div>
         <h2 id="viewTitle" style="margin-top:0; color:#2c3e50; line-height:1.3;"></h2>
         <div id="viewBody" class="view-body"></div>
-        <div id="viewLink" style="margin-top:25px;"></div>
+        
+        <div id="viewLink" style="margin-top:20px;"></div>
+        <div id="viewAttachments" class="attachment-section" style="display:none;">
+            <span class="attachment-label">📎 첨부 파일 (클릭하여 열기)</span>
+            <div id="attachList"></div>
+        </div>
     </div>
 </div>
 
@@ -274,318 +285,162 @@
 </nav>
 
 <script>
-    // --- 설정 및 DB 초기화 ---
-    const DB_NAME = 'InsightDB_v3'; // 아카이브와 DB 분리
+    const DB_NAME = 'InsightDB_v3'; 
     const STORE_NAME = 'insights';
     let db;
     let currDate = new Date();
-    // 기본 태그
     let myTags = JSON.parse(localStorage.getItem('insightTags')) || ['#건설실무','#철학','#코드','#음악','#개인사'];
     let isSelectionMode = false;
     let selectedIds = new Set();
-    let currentSelectedDateKey = null;
-
     let inputSelectedTags = new Set();
-
-    // 공휴일 데이터
-    const HOLIDAYS = {
-        '2025-01-01': '신정', '2025-01-28': '설날', '2025-01-29': '설날', '2025-01-30': '설날',
-        '2025-03-01': '삼일절', '2025-05-05': '어린이날', '2025-05-06': '석가탄신일',
-        '2025-06-06': '현충일', '2025-08-15': '광복절', '2025-10-03': '개천절',
-        '2025-10-05': '추석', '2025-10-06': '추석', '2025-10-07': '추석',
-        '2025-10-09': '한글날', '2025-12-25': '성탄절'
-    };
+    const HOLIDAYS = {'2025-01-01':'신정','2025-01-28':'설날','2025-01-29':'설날','2025-01-30':'설날','2025-03-01':'삼일절','2025-05-05':'어린이날','2025-05-06':'석가탄신일','2025-06-06':'현충일','2025-08-15':'광복절','2025-10-03':'개천절','2025-10-05':'추석','2025-10-06':'추석','2025-10-07':'추석','2025-10-09':'한글날','2025-12-25':'성탄절'};
 
     function getPassword() { return localStorage.getItem('appPass') || "0403"; }
-    function checkPass() {
-        if(document.getElementById('passInput').value === getPassword()) {
-            document.getElementById('loginOverlay').style.display = 'none';
-        } else { alert('비밀번호가 틀렸습니다.'); document.getElementById('passInput').value=''; }
-    }
-    function changePassword() {
-        const cur = prompt("현재 비밀번호:"); if(cur!==getPassword()) return alert("틀렸습니다.");
-        const newP = prompt("새 비밀번호:"); if(newP) { localStorage.setItem('appPass', newP); alert("변경 완료."); }
-    }
+    function checkPass() { if(document.getElementById('passInput').value === getPassword()) { document.getElementById('loginOverlay').style.display = 'none'; } else { alert('틀렸습니다.'); } }
+    function changePassword() { const cur = prompt("현재 비밀번호:"); if(cur!==getPassword()) return alert("틀렸습니다."); const newP = prompt("새 비밀번호:"); if(newP) { localStorage.setItem('appPass', newP); alert("변경 완료."); } }
 
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = e => { db = e.target.result; if(!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, {keyPath:'id'}); };
     request.onsuccess = e => { db = e.target.result; initApp(); };
 
-    function initApp() { 
-        updateTagSelects(); 
-        document.getElementById('inputDate').value = new Date().toISOString().substring(0, 10);
-        addLinkField('inputLinkContainer');
-        renderCalendar(); 
-        renderMemos(); 
-    }
+    function initApp() { updateTagSelects(); document.getElementById('inputDate').value = new Date().toISOString().substring(0, 10); addLinkField('inputLinkContainer'); renderCalendar(); renderMemos(); }
 
-    // --- 태그 관리 함수들 ---
-    function openTagManager() { renderTagListModal(); document.getElementById('tagManagerModal').style.display = 'flex'; }
-    function closeTagManager() { document.getElementById('tagManagerModal').style.display = 'none'; }
-    function renderTagListModal() { document.getElementById('tagListDisplay').innerHTML = myTags.map(t => `<span class="tag-item">${t} <span class="tag-del-btn" onclick="removeTag('${t}')">×</span></span>`).join(''); }
-    function addNewTag() { 
-        const val = document.getElementById('newTagInput').value.trim(); 
-        if(!val) return; 
-        if(!myTags.includes(val)) { 
-            myTags.push(val); saveTags(); 
-            document.getElementById('newTagInput').value = ''; 
-            renderTagListModal(); updateTagSelects(); 
-        } 
+    // --- 파일 처리 로직 ---
+    function updateFileList(input) {
+        const display = document.getElementById('fileListDisplay');
+        if(input.files.length > 0) {
+            let names = [];
+            for(let i=0; i<input.files.length; i++) names.push(`📄 ${input.files[i].name}`);
+            display.innerText = names.join('\n');
+            display.style.color = "#2c3e50";
+        } else {
+            display.innerText = "";
+        }
     }
-    function removeTag(tag) { 
-        if(confirm('태그를 삭제하시겠습니까?')) { 
-            myTags = myTags.filter(t => t !== tag); saveTags(); 
-            renderTagListModal(); updateTagSelects(); 
-        } 
-    }
-    function saveTags() { localStorage.setItem('insightTags', JSON.stringify(myTags)); }
-
-    function renderTagSelector(containerId, selectedSet) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = '';
-        myTags.forEach(tag => {
-             const btn = document.createElement('span');
-             btn.className = 'tag-chip-btn' + (selectedSet.has(tag) ? ' active' : '');
-             btn.innerText = tag;
-             btn.onclick = () => {
-                 if(selectedSet.has(tag)) selectedSet.delete(tag); else selectedSet.add(tag);
-                 renderTagSelector(containerId, selectedSet); 
-             };
-             container.appendChild(btn);
+    
+    function readFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve({ name: file.name, type: file.type, data: reader.result });
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
     }
 
-    function updateTagSelects() {
-        const opts = myTags.map(t => `<option value="${t}">${t}</option>`).join('');
-        const curFilter = document.getElementById('listFilter').value;
-        document.getElementById('listFilter').innerHTML = `<option value="all">전체보기</option>` + opts;
-        document.getElementById('listFilter').value = curFilter;
-        renderTagSelector('inputTagContainer', inputSelectedTags);
-    }
-
-    // --- 링크 관리 ---
-    function addLinkField(containerId, value = "") {
-        const container = document.getElementById(containerId);
-        const div = document.createElement('div');
-        div.className = 'link-row';
-        div.innerHTML = `<input type="text" class="link-input" placeholder="https://..." value="${value}"><button class="btn-del-link" onclick="this.parentElement.remove()">-</button>`;
-        container.appendChild(div);
-    }
-    function collectLinks(containerId) {
-        return Array.from(document.querySelectorAll(`#${containerId} .link-input`)).map(i => i.value.trim()).filter(v => v);
-    }
-
-    // --- 리스트/선택 모드 ---
-    function toggleSelectMode() {
-        isSelectionMode = !isSelectionMode;
-        selectedIds.clear(); 
-        const btn = document.getElementById('selectModeBtn');
-        const bulkBar = document.getElementById('bulkDeleteBar');
-        if(isSelectionMode) { btn.classList.add('active'); bulkBar.style.display = 'block'; updateBulkBar(); } else { btn.classList.remove('active'); bulkBar.style.display = 'none'; }
-        renderMemos(); 
-    }
-    function toggleSelectCard(id) { if(selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); renderMemos(); updateBulkBar(); }
-    function updateBulkBar() { document.getElementById('selectedCount').innerText = selectedIds.size; }
-    function deleteSelectedMemos() {
-        if(selectedIds.size === 0) return alert("선택된 항목이 없습니다.");
-        if(!confirm(`선택한 ${selectedIds.size}개를 삭제하시겠습니까?`)) return;
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        selectedIds.forEach(id => tx.objectStore(STORE_NAME).delete(id));
-        tx.oncomplete = () => { alert("삭제되었습니다."); toggleSelectMode(); renderMemos(); renderCalendar(); };
-    }
-
-    // --- 탭 전환 ---
-    function switchTab(tab) {
-        window.scrollTo(0, 0); 
-        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
-        document.getElementById('tab-'+tab).classList.add('active');
-        const tabs = ['calendar','list','write','data'];
-        document.querySelectorAll('.nav-item')[tabs.indexOf(tab)].classList.add('active');
-        if(tab === 'list') renderMemos();
-        if(tab === 'calendar') { currDate = new Date(); renderCalendar(); }
-    }
-
     // --- 저장 로직 ---
-    function saveNewMemo() {
-        const title = document.getElementById('inputTitle').value; // Context
-        const content = document.getElementById('inputContent').value; // Response
+    async function saveNewMemo() {
+        const title = document.getElementById('inputTitle').value;
+        const content = document.getElementById('inputContent').value;
         const tags = Array.from(inputSelectedTags);
         const links = collectLinks('inputLinkContainer');
         const dateVal = document.getElementById('inputDate').value;
+        const fileInput = document.getElementById('inputFile');
 
-        if(!title || !content) return alert('맥락과 답변을 모두 입력해주세요.');
+        if(!title || !content) return alert('맥락과 답변을 입력해주세요.');
+
+        // 파일 처리
+        let attachments = [];
+        if(fileInput.files.length > 0) {
+            for(let i=0; i<fileInput.files.length; i++) {
+                if(fileInput.files[i].size > 10 * 1024 * 1024) {
+                    alert(`[주의] ${fileInput.files[i].name} 파일이 10MB를 초과합니다. 구글 드라이브 링크 사용을 권장합니다.`);
+                }
+                const fileData = await readFile(fileInput.files[i]);
+                attachments.push(fileData);
+            }
+        }
         
         const store = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME);
         store.add({
             id: Date.now(),
-            dateStr: dateVal, // YYYY-MM-DD
+            dateStr: dateVal,
             title: title,
             tags: tags,
             content: content,
-            links: links
+            links: links,
+            attachments: attachments // 파일 데이터 저장
         }).onsuccess = () => {
             alert('저장되었습니다!');
             document.getElementById('inputTitle').value = "";
             document.getElementById('inputContent').value = "";
+            document.getElementById('inputFile').value = "";
+            document.getElementById('fileListDisplay').innerText = "";
             document.getElementById('inputLinkContainer').innerHTML = "";
             addLinkField('inputLinkContainer');
             inputSelectedTags.clear();
-            renderTagSelector('inputTagContainer', inputSelectedTags);
+            updateTagSelects();
             switchTab('calendar'); 
         };
     }
 
-    // --- 렌더링 로직 (리스트) ---
-    async function renderMemos() {
-        const list = document.getElementById('memoList'); list.innerHTML='';
-        const memos = await getAll();
-        const filter = document.getElementById('listFilter').value;
-        const key = document.getElementById('searchInput').value.toLowerCase();
-        const startVal = document.getElementById('filterStartDate').value;
-        const endVal = document.getElementById('filterEndDate').value;
-        
-        memos.sort((a,b) => b.dateStr.localeCompare(a.dateStr) || b.id - a.id); // 날짜 내림차순
-
-        memos.forEach(m => {
-            if(filter !== 'all' && !(m.tags||[]).includes(filter)) return;
-            if(key && !m.title.toLowerCase().includes(key) && !m.content.toLowerCase().includes(key)) return;
-            
-            // 날짜 필터링
-            if(startVal && m.dateStr < startVal) return;
-            if(endVal && m.dateStr > endVal) return;
-            
-            const tagsHtml = (m.tags||[]).map(t => `<span class="mini-tag">${t}</span>`).join(' ');
-            const isSelected = selectedIds.has(m.id);
-            const selectClass = isSelected ? 'selected' : '';
-            const clickAction = isSelectionMode ? `toggleSelectCard(${m.id})` : `openViewModal(${m.id})`;
-
-            list.innerHTML += `
-            <div class="memo-card ${selectClass} ${isSelectionMode?'selection-mode':''}" onclick="${clickAction}">
-                <div class="check-circle"></div>
-                <div style="display:flex; justify-content:space-between; align-items:center; color:#888; font-size:0.8rem; margin-bottom:5px;">
-                    <span>${m.dateStr}</span>
-                    <div class="card-tags">${tagsHtml}</div>
-                </div>
-                <h3 style="color:#2c3e50;">Q. ${m.title}</h3>
-                <p>${m.content.substring(0, 50)}...</p>
-            </div>`;
-        });
-    }
-
-    // --- 렌더링 로직 (캘린더) ---
-    async function renderCalendar() {
-        const y = currDate.getFullYear(), m = currDate.getMonth();
-        document.getElementById('currentMonth').innerText = `${y}년 ${m+1}월`;
-        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
-        
-        const days = ['일','월','화','수','목','금','토'];
-        days.forEach((d, idx) => {
-            grid.innerHTML += `<div class="day-header ${idx===0?'sun':''} ${idx===6?'sat':''}">${d}</div>`;
-        });
-
-        const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
-        for(let i=0; i<first; i++) grid.innerHTML += `<div></div>`;
-        
-        const memos = await getAll();
-        
-        for(let d=1; d<=last; d++) {
-            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const dayMemos = memos.filter(m => m.dateStr === dateStr);
-            const holiday = HOLIDAYS[dateStr];
-            
-            let extraClass = '';
-            const dayOfWeek = new Date(y,m,d).getDay();
-            if(dayOfWeek===0) extraClass += ' sun'; else if(dayOfWeek===6) extraClass += ' sat';
-            if(holiday) extraClass += ' holiday';
-
-            const div = document.createElement('div');
-            div.className = 'cal-day' + extraClass + (dayMemos.length>0 ? ' has-memo' : '');
-            if(dateStr === new Date().toISOString().substring(0,10)) div.classList.add('today');
-
-            let pcEvents = '';
-            dayMemos.slice(0, 3).forEach(m => { pcEvents += `<div class="cal-event-item" onclick="event.stopPropagation(); openViewModal(${m.id})">${m.title}</div>`; });
-            if(dayMemos.length > 3) pcEvents += `<div class="more-items">+${dayMemos.length - 3}</div>`;
-
-            const holidayHtml = holiday ? `<div class="holiday-name">${holiday}</div>` : '';
-            div.innerHTML = `<span class="day-num">${d}</span>${holidayHtml}${dayMemos.length>0?'<div class="dot"></div>':''}<div class="cal-events-pc">${pcEvents}</div>`;
-            
-            if(dayMemos.length > 0) div.onclick = () => showDayMemos(dateStr, memos);
-            else div.onclick = () => { document.getElementById('inputDate').value = dateStr; switchTab('write'); };
-
-            grid.appendChild(div);
-        }
-        document.getElementById('calendarMemos').innerHTML = '';
-    }
-
-    function showDayMemos(dateStr, memos) {
-        const target = memos.filter(m => m.dateStr === dateStr);
-        const box = document.getElementById('calendarMemos');
-        let html = `<div style="text-align:left; background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-            <h3 style="margin:0 0 15px 0; font-size:1.1rem; color:var(--primary-color); border-bottom:2px solid var(--accent-color); padding-bottom:8px;">📅 ${dateStr}</h3>`;
-        target.forEach(m => {
-             html += `<div onclick="openViewModal(${m.id})" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
-                <div style="font-weight:bold; color:#333;">Q. ${m.title}</div>
-            </div>`;
-        });
-        html += `</div>`;
-        box.innerHTML = html;
-    }
-    function changeMonth(d) { currDate.setMonth(currDate.getMonth()+d); renderCalendar(); }
-
-    // --- 뷰어 (마크다운) ---
+    // --- 뷰어 로직 (파일 표시 포함) ---
     async function openViewModal(id) {
         const m = await new Promise(r => db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = e => r(e.target.result));
         if(!m) return;
         document.getElementById('viewIdHidden').value = m.id;
         document.getElementById('viewTitle').innerText = "Q. " + m.title;
         document.getElementById('viewDate').innerText = m.dateStr;
-        
-        const tagsHtml = (m.tags||[]).map(t => `<span class="mini-tag" style="background:var(--accent-color); color:white;">${t}</span>`).join('');
-        document.getElementById('viewTagList').innerHTML = tagsHtml;
-        
-        // 마크다운 변환
+        document.getElementById('viewTagList').innerHTML = (m.tags||[]).map(t => `<span class="mini-tag" style="background:var(--accent-color); color:white;">${t}</span>`).join('');
         document.getElementById('viewBody').innerHTML = marked.parse(m.content);
         
+        // 링크
         const links = m.links || [];
-        document.getElementById('viewLink').innerHTML = links.map((l,i) => `<a href="${l}" target="_blank" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:5px; border-radius:8px; text-decoration:none; color:#2980b9; font-weight:bold;">🔗 링크 ${i+1} 열기</a>`).join('');
+        document.getElementById('viewLink').innerHTML = links.map((l,i) => `<a href="${l}" target="_blank" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:5px; border-radius:8px; text-decoration:none; color:#2980b9; font-weight:bold;">🔗 관련 링크 ${i+1}</a>`).join('');
+
+        // 첨부파일
+        const attachBox = document.getElementById('viewAttachments');
+        const attachList = document.getElementById('attachList');
+        attachList.innerHTML = '';
+        
+        if(m.attachments && m.attachments.length > 0) {
+            attachBox.style.display = 'block';
+            m.attachments.forEach(file => {
+                const isImg = file.type.startsWith('image/');
+                let icon = isImg ? '🖼️' : '📄';
+                let html = `<a href="${file.data}" download="${file.name}" class="attach-item">
+                    <span class="attach-icon">${icon}</span>
+                    <span class="attach-name">${file.name}</span>
+                    <span style="font-size:0.8rem; color:#888;">다운로드</span>
+                </a>`;
+                
+                // 이미지는 미리보기 추가
+                if(isImg) {
+                    html += `<div class="img-preview-box"><img src="${file.data}"></div>`;
+                }
+                attachList.innerHTML += html;
+            });
+        } else {
+            attachBox.style.display = 'none';
+        }
         
         document.getElementById('viewModal').style.display = 'flex';
     }
-    function closeViewModal() { document.getElementById('viewModal').style.display = 'none'; }
-    function deleteFromView() {
-        if(!confirm('삭제하시겠습니까?')) return;
-        const id = Number(document.getElementById('viewIdHidden').value);
-        db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id).onsuccess = () => {
-            alert('삭제되었습니다.'); closeViewModal(); renderCalendar(); renderMemos();
-        };
-    }
 
-    // --- 유틸리티 ---
-    function getAll() { return new Promise(r => db.transaction(STORE_NAME,'readonly').objectStore(STORE_NAME).getAll().onsuccess = e => r(e.target.result)); }
-    function backupData() { 
-        getAll().then(data => {
-            if(data.length==0) return alert('데이터 없음'); 
-            const blob = new Blob([JSON.stringify({version:"v3.1", insights:data, tags:myTags})], {type:'application/json'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Insight_Backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
-        }); 
-    }
-    function restoreData(input) { 
-        const file = input.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            try {
-                const data = JSON.parse(e.target.result);
-                const list = data.insights || data; // 호환성
-                if(data.tags) { myTags = data.tags; saveTags(); }
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                list.forEach(item => tx.objectStore(STORE_NAME).put(item));
-                tx.oncomplete = () => { alert('복원 완료'); location.reload(); };
-            } catch(err) { alert('파일 오류'); }
-        };
-        reader.readAsText(file);
-    }
-    function resetApp() { if(confirm('모든 데이터를 삭제하고 초기화하시겠습니까?')) { db.transaction(STORE_NAME,'readwrite').objectStore(STORE_NAME).clear().onsuccess=()=>{ location.reload(); }; } }
+    // --- 기타 기능 (이전과 동일) ---
+    function openTagManager(){renderTagListModal();document.getElementById('tagManagerModal').style.display='flex'}
+    function closeTagManager(){document.getElementById('tagManagerModal').style.display='none'}
+    function renderTagListModal(){document.getElementById('tagListDisplay').innerHTML=myTags.map(t=>`<span class="tag-item">${t} <span class="tag-del-btn" onclick="removeTag('${t}')">×</span></span>`).join('')}
+    function addNewTag(){const val=document.getElementById('newTagInput').value.trim();if(!val)return;if(!myTags.includes(val)){myTags.push(val);saveTags();document.getElementById('newTagInput').value='';renderTagListModal();updateTagSelects()}}
+    function removeTag(tag){if(confirm('삭제?')){myTags=myTags.filter(t=>t!==tag);saveTags();renderTagListModal();updateTagSelects()}}
+    function saveTags(){localStorage.setItem('insightTags',JSON.stringify(myTags))}
+    function updateTagSelects(){const opts=myTags.map(t=>`<option value="${t}">${t}</option>`).join('');const cur=document.getElementById('listFilter').value;document.getElementById('listFilter').innerHTML=`<option value="all">전체보기</option>`+opts;document.getElementById('listFilter').value=cur;renderTagSelector('inputTagContainer',inputSelectedTags)}
+    function renderTagSelector(cid,set){const c=document.getElementById(cid);c.innerHTML='';myTags.forEach(t=>{const b=document.createElement('span');b.className='tag-chip-btn'+(set.has(t)?' active':'');b.innerText=t;b.onclick=()=>{if(set.has(t))set.delete(t);else set.add(t);renderTagSelector(cid,set)};c.appendChild(b)})}
+    function addLinkField(cid){const c=document.getElementById(cid);const d=document.createElement('div');d.className='link-row';d.innerHTML=`<input type="text" class="link-input" placeholder="https://..."><button class="btn-del-link" onclick="this.parentElement.remove()">-</button>`;c.appendChild(d)}
+    function collectLinks(cid){return Array.from(document.querySelectorAll(`#${cid} .link-input`)).map(i=>i.value.trim()).filter(v=>v)}
+    function toggleSelectMode(){isSelectionMode=!isSelectionMode;selectedIds.clear();const b=document.getElementById('selectModeBtn');const bar=document.getElementById('bulkDeleteBar');if(isSelectionMode){b.classList.add('active');bar.style.display='block';updateBulkBar()}else{b.classList.remove('active');bar.style.display='none'}renderMemos()}
+    function toggleSelectCard(id){if(selectedIds.has(id))selectedIds.delete(id);else selectedIds.add(id);renderMemos();updateBulkBar()}
+    function updateBulkBar(){document.getElementById('selectedCount').innerText=selectedIds.size}
+    function deleteSelectedMemos(){if(!confirm('삭제?'))return;const tx=db.transaction(STORE_NAME,'readwrite');selectedIds.forEach(id=>tx.objectStore(STORE_NAME).delete(id));tx.oncomplete=()=>{toggleSelectMode();renderMemos();renderCalendar()}}
+    function switchTab(t){window.scrollTo(0,0);document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');const tabs=['calendar','list','write','data'];document.querySelectorAll('.nav-item')[tabs.indexOf(t)].classList.add('active');if(t==='list')renderMemos();if(t==='calendar'){currDate=new Date();renderCalendar()}}
+    async function renderMemos(){const l=document.getElementById('memoList');l.innerHTML='';const memos=await getAll();const filter=document.getElementById('listFilter').value;const key=document.getElementById('searchInput').value.toLowerCase();const sVal=document.getElementById('filterStartDate').value;const eVal=document.getElementById('filterEndDate').value;memos.sort((a,b)=>b.dateStr.localeCompare(a.dateStr)||b.id-a.id);memos.forEach(m=>{if(filter!=='all'&&!(m.tags||[]).includes(filter))return;if(key&&!m.title.toLowerCase().includes(key)&&!m.content.toLowerCase().includes(key))return;if(sVal&&m.dateStr<sVal)return;if(eVal&&m.dateStr>eVal)return;const tagsHtml=(m.tags||[]).map(t=>`<span class="mini-tag">${t}</span>`).join(' ');const isSel=selectedIds.has(m.id);const clk=isSelectionMode?`toggleSelectCard(${m.id})`:`openViewModal(${m.id})`;l.innerHTML+=`<div class="memo-card ${isSel?'selected':''} ${isSelectionMode?'selection-mode':''}" onclick="${clk}"><div class="check-circle"></div><div style="display:flex;justify-content:space-between;color:#888;font-size:0.8rem;margin-bottom:5px;"><span>${m.dateStr}</span><div class="card-tags">${tagsHtml}</div></div><h3 style="color:#2c3e50;">Q. ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</h3><p>${m.content.substring(0,50)}...</p></div>`})}
+    async function renderCalendar(){const y=currDate.getFullYear(),m=currDate.getMonth();document.getElementById('currentMonth').innerText=`${y}년 ${m+1}월`;const g=document.getElementById('calendarGrid');g.innerHTML='';const days=['일','월','화','수','목','금','토'];days.forEach((d,i)=>g.innerHTML+=`<div class="day-header ${i===0?'sun':''} ${i===6?'sat':''}">${d}</div>`);const f=new Date(y,m,1).getDay(),l=new Date(y,m+1,0).getDate();for(let i=0;i<f;i++)g.innerHTML+=`<div></div>`;const memos=await getAll();for(let d=1;d<=l;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const dm=memos.filter(i=>i.dateStr===ds);const h=HOLIDAYS[ds];let ex='';const dow=new Date(y,m,d).getDay();if(dow===0)ex+=' sun';else if(dow===6)ex+=' sat';if(h)ex+=' holiday';const div=document.createElement('div');div.className='cal-day'+ex+(dm.length>0?' has-memo':'');if(ds===new Date().toISOString().substring(0,10))div.classList.add('today');let pe='';dm.slice(0,3).forEach(i=>{pe+=`<div class="cal-event-item" onclick="event.stopPropagation();openViewModal(${i.id})">${i.title}</div>`});if(dm.length>3)pe+=`<div class="more-items">+${dm.length-3}</div>`;div.innerHTML=`<span class="day-num">${d}</span>${h?`<div class="holiday-name">${h}</div>`:''}${dm.length>0?'<div class="dot"></div>':''}<div class="cal-events-pc">${pe}</div>`;if(dm.length>0)div.onclick=()=>showDayMemos(ds,memos);else div.onclick=()=>{document.getElementById('inputDate').value=ds;switchTab('write')};g.appendChild(div)}}
+    function showDayMemos(ds,ms){const t=ms.filter(m=>m.dateStr===ds);const b=document.getElementById('calendarMemos');let h=`<div style="text-align:left;background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1);"><h3 style="margin:0 0 15px 0;font-size:1.1rem;color:var(--primary-color);border-bottom:2px solid var(--accent-color);padding-bottom:8px;">📅 ${ds}</h3>`;t.forEach(m=>{h+=`<div onclick="openViewModal(${m.id})" style="padding:10px;border-bottom:1px solid #eee;cursor:pointer;"><div style="font-weight:bold;color:#333;">Q. ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</div></div>`});h+=`</div>`;b.innerHTML=h}
+    function closeViewModal(){document.getElementById('viewModal').style.display='none'}
+    function deleteFromView(){if(!confirm('삭제?'))return;const id=Number(document.getElementById('viewIdHidden').value);db.transaction(STORE_NAME,'readwrite').objectStore(STORE_NAME).delete(id).onsuccess=()=>{closeViewModal();renderCalendar();renderMemos()}}
+    function getAll(){return new Promise(r=>db.transaction(STORE_NAME,'readonly').objectStore(STORE_NAME).getAll().onsuccess=e=>r(e.target.result))}
+    function backupData(){getAll().then(d=>{if(d.length==0)return alert('데이터 없음');const b=new Blob([JSON.stringify({version:"v3.2",insights:d,tags:myTags})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`Insight_Backup_${new Date().toISOString().slice(0,10)}.json`;a.click()})}
+    function restoreData(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);const l=d.insights||d;if(d.tags){myTags=d.tags;saveTags()}const tx=db.transaction(STORE_NAME,'readwrite');l.forEach(i=>tx.objectStore(STORE_NAME).put(i));tx.oncomplete=()=>{alert('복원 완료');location.reload()}}catch(e){alert('파일 오류')}};r.readAsText(f)}
+    function resetApp(){if(confirm('초기화?')){db.transaction(STORE_NAME,'readwrite').objectStore(STORE_NAME).clear().onsuccess=()=>{location.reload()}}}
 </script>
 </body>
 </html>
