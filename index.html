@@ -22,49 +22,59 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 15px; /* 모바일 여백 조정 */
+            padding: 0; /* 헤더를 위해 패딩 제거 */
             box-sizing: border-box;
             line-height: 1.6;
-            -webkit-text-size-adjust: 100%; /* 모바일 폰트 크기 자동조정 방지 */
         }
 
-        /* --- 레이아웃 핵심 수정 --- */
+        /* 1. 상단 타이틀바 (버전 확인용) */
+        header {
+            background-color: #000;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .app-title { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .version-badge { background: var(--accent); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+
+        /* 메인 컨테이너 */
         .container {
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 20px auto;
+            padding: 0 15px;
             display: grid;
             grid-template-columns: 380px 1fr; /* PC: 좌우 분할 */
             gap: 25px;
             align-items: start;
         }
 
-        /* ★모바일 전용 스타일 (여기가 핵심입니다)★ */
+        /* --- 모바일 전용 스타일 (겹침 해결 핵심) --- */
         @media (max-width: 900px) {
             .container {
-                display: flex;       /* 그리드 대신 플렉스 사용 */
-                flex-direction: column; /* 세로로 쭉 나열 */
+                display: flex;
+                flex-direction: column; /* 세로 배치 */
                 gap: 30px;
+                margin-top: 10px;
             }
 
             .input-panel {
-                position: static !important; /* 고정 기능 강제 해제 */
+                position: static !important; /* 고정 해제 (겹침 방지) */
                 width: 100%;
-                order: 1; /* 입력창이 무조건 1번 */
+                z-index: 1;
             }
 
             .view-panel {
                 width: 100%;
-                order: 2; /* 뷰어 패널이 무조건 2번 */
-                overflow: visible; /* 잘림 방지 */
+                z-index: 1;
             }
             
-            #inputResponse {
-                height: 200px; /* 모바일에서는 높이 줄임 */
-            }
+            #inputResponse { height: 200px; } /* 모바일 높이 조정 */
         }
-
-        /* 공통 스타일 */
-        h2 { margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.2rem; color: #fff;}
 
         /* 입력 패널 */
         .input-panel {
@@ -72,29 +82,35 @@
             padding: 20px;
             border-radius: 12px;
             border: 1px solid var(--border);
-            /* PC에서는 고정 */
+            /* PC에서만 고정 */
             position: sticky;
-            top: 20px;
-            z-index: 10;
+            top: 80px; 
         }
 
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; color: var(--accent); margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
         
-        input[type="text"], textarea {
+        input[type="text"], input[type="date"], textarea {
             width: 100%;
             background-color: var(--input-bg);
             border: 1px solid var(--border);
             color: #fff;
             padding: 12px;
             border-radius: 6px;
-            font-size: 16px; /* 모바일 입력 확대 방지 */
+            font-size: 16px; 
             box-sizing: border-box;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        /* 날짜 입력창 스타일 */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* 달력 아이콘 흰색으로 */
+            cursor: pointer;
         }
         
         input:focus, textarea:focus { outline: none; border-color: var(--accent); background-color: #363636; }
         #inputContext { height: 60px; resize: none; }
-        #inputResponse { height: 350px; font-family: 'Consolas', monospace; resize: vertical; line-height: 1.5;}
+        #inputResponse { height: 400px; font-family: 'Consolas', monospace; resize: vertical; line-height: 1.5;}
 
         .btn-save {
             width: 100%; padding: 14px; background-color: var(--accent); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
@@ -104,27 +120,20 @@
         .view-panel { display: flex; flex-direction: column; gap: 20px; }
 
         /* 탭 버튼 */
-        .tabs { display: flex; gap: 10px; margin-bottom: 0; }
+        .tabs { display: flex; gap: 10px; }
         .tab-btn {
-            flex: 1; /* 모바일에서 버튼 꽉 차게 */
-            background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-sub);
+            flex: 1; background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-sub);
             padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center;
         }
         .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
         /* 캘린더 */
         .calendar-wrapper {
-            background-color: var(--panel-bg);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
+            background-color: var(--panel-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border);
         }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .calendar-header button { background: none; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 4px; }
-        
-        .calendar-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
         .cal-day-name { color: var(--text-sub); font-size: 0.8rem; padding-bottom: 5px; }
         .cal-date {
             background-color: #252525; min-height: 50px; border-radius: 4px; padding: 4px;
@@ -133,8 +142,7 @@
         .cal-date.today { border: 1px solid var(--accent); }
         .cal-date.active-filter { background-color: rgba(76, 175, 80, 0.3); border: 1px solid var(--accent); }
         .date-num { font-size: 0.8rem; margin-bottom: 2px; }
-        
-        .dot-container { display: flex; gap: 2px; justify-content: center; }
+        .dot-container { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap;}
         .dot { width: 4px; height: 4px; background-color: var(--accent); border-radius: 50%; }
 
         /* 리스트 카드 */
@@ -144,45 +152,50 @@
         }
         .card-header { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; }
         .card-context { font-size: 1.1rem; font-weight: bold; color: #fff; }
-        .card-date { font-size: 0.8rem; color: var(--text-sub); }
+        .card-date { font-size: 0.9rem; color: var(--accent); font-weight: bold; } /* 날짜 강조 */
         
         .card-body { color: #ddd; font-size: 0.95rem; line-height: 1.6; overflow-x: auto; }
         .card-body h1, .card-body h2 { border-bottom: none; margin-top: 15px; color: #fff; font-size: 1.1em; }
-        .card-body code { background: #333; padding: 2px 5px; color: #ff9800; }
-        .card-body pre { background: #111; padding: 10px; border-radius: 6px; overflow-x: auto; }
+        .card-body code { background: #333; padding: 2px 5px; color: #ff9800; border-radius: 3px; font-family: monospace;}
+        .card-body pre { background: #111; padding: 10px; border-radius: 6px; overflow-x: auto; margin: 10px 0;}
 
         .card-tags { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; display: flex; flex-wrap: wrap; gap: 8px; }
         .tag { font-size: 0.75rem; background-color: #2c2c2c; color: var(--accent); padding: 4px 8px; border-radius: 4px; border: 1px solid #444; }
-        
         .btn-delete { background: none; border: none; color: #666; cursor: pointer; margin-left: auto; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
+<header>
+    <div class="app-title">🧪 Insight Lab <span class="version-badge">v2.2</span></div>
+</header>
+
 <div class="container">
     
     <div class="input-panel">
-        <h2>✏️ Insight Input</h2>
         <div class="input-group">
-            <label>1. Context (질문 의도)</label>
+            <label>1. Date (날짜 선택)</label>
+            <input type="date" id="inputDate">
+        </div>
+        <div class="input-group">
+            <label>2. Context (질문 의도)</label>
             <textarea id="inputContext" placeholder="질문의 맥락을 짧게 기록하세요"></textarea>
         </div>
         <div class="input-group">
-            <label>2. Gemini Response (답변)</label>
+            <label>3. Gemini Response (답변)</label>
             <textarea id="inputResponse" placeholder="내용 붙여넣기..."></textarea>
         </div>
         <div class="input-group">
-            <label>3. Tags (태그)</label>
+            <label>4. Tags (태그)</label>
             <input type="text" id="inputTags" placeholder="#태그1 #태그2">
         </div>
         <button class="btn-save" onclick="saveInsight()">💾 저장하기</button>
     </div>
 
     <div class="view-panel">
-        
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('calendar')">📅 캘린더 보기</button>
-            <button class="tab-btn" onclick="switchTab('list')">📝 전체 목록 보기</button>
+            <button class="tab-btn active" onclick="switchTab('calendar')">📅 캘린더</button>
+            <button class="tab-btn" onclick="switchTab('list')">📝 전체 목록</button>
         </div>
 
         <div id="calendarView" class="calendar-wrapper">
@@ -199,51 +212,59 @@
 </div>
 
 <script>
-    // --- [스크립트 로직 (기존과 동일)] ---
     const STORAGE_KEY = 'jdm_insight_lab_v1';
     let insights = [];
     let currentDate = new Date();
 
     window.onload = function() {
+        // 오늘 날짜로 입력창 초기화
+        document.getElementById('inputDate').valueAsDate = new Date();
+
         const savedData = localStorage.getItem(STORAGE_KEY);
         if (savedData) insights = JSON.parse(savedData);
         renderCalendar();
-        renderCards(insights); // 초기엔 전체 목록 렌더링
-        // 모바일에서는 캘린더 탭을 기본으로 하되, 목록은 숨김 처리
         switchTab('calendar');
     };
 
     function saveInsight() {
+        const dateInput = document.getElementById('inputDate').value; // 사용자가 선택한 날짜 (YYYY-MM-DD)
         const context = document.getElementById('inputContext').value.trim();
         const response = document.getElementById('inputResponse').value.trim();
         const tagsInput = document.getElementById('inputTags').value.trim();
 
+        if (!dateInput) { alert('날짜를 선택해주세요.'); return; }
         if (!context || !response) { alert('내용을 입력해주세요.'); return; }
 
         const tags = tagsInput.split(/[\s,]+/).filter(t => t.length > 0).map(t => t.startsWith('#') ? t : '#' + t);
-        const now = new Date();
-        const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        
+        // 날짜 포맷팅 (YYYY. MM. DD)
+        const dateParts = dateInput.split('-');
+        const displayDate = `${dateParts[0]}. ${dateParts[1]}. ${dateParts[2]}`;
 
         const newInsight = {
             id: Date.now(),
-            date: dateStr,
-            displayDate: now.toLocaleString('ko-KR'),
+            date: dateInput, // 데이터 필터링용 (YYYY-MM-DD)
+            displayDate: displayDate, // 화면 표시용
             context: context,
             response: response,
             tags: tags
         };
 
-        insights.unshift(newInsight);
+        insights.unshift(newInsight); // 최신순 저장
+        // 날짜순으로 재정렬 (과거 날짜 입력 시 순서 꼬임 방지)
+        insights.sort((a, b) => new Date(b.date) - new Date(a.date));
+
         localStorage.setItem(STORAGE_KEY, JSON.stringify(insights));
 
+        // 입력창 리셋
         document.getElementById('inputContext').value = '';
         document.getElementById('inputResponse').value = '';
         document.getElementById('inputTags').value = '';
+        // 날짜는 리셋하지 않고 그대로 둠 (연속 입력 편의성)
         
         renderCalendar();
         renderCards(insights);
         alert('저장되었습니다.');
-        // 저장 후 목록 탭으로 자동 이동
         switchTab('list');
     }
 
@@ -278,6 +299,8 @@
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const cell = document.createElement('div');
             cell.className = 'cal-date';
+            
+            // 오늘 날짜 표시
             const todayStr = new Date().toISOString().split('T')[0];
             if (dateStr === todayStr) cell.classList.add('today');
 
@@ -287,7 +310,7 @@
             if (count > 0) {
                 const dotContainer = document.createElement('div');
                 dotContainer.className = 'dot-container';
-                for(let k=0; k<Math.min(count, 3); k++) {
+                for(let k=0; k<Math.min(count, 4); k++) {
                     const dot = document.createElement('div'); dot.className = 'dot'; dotContainer.appendChild(dot);
                 }
                 cell.appendChild(dotContainer);
@@ -307,8 +330,7 @@
         if(cellElement) cellElement.classList.add('active-filter');
         const filtered = insights.filter(item => item.date === dateStr);
         renderCards(filtered);
-        // 날짜 클릭 시 리스트 탭으로 보여줌 (모바일 편의성)
-        switchTab('list'); 
+        switchTab('list');
     }
 
     function renderCards(data) {
@@ -327,7 +349,7 @@
             card.innerHTML = `
                 <div class="card-header">
                     <div class="card-context">Q. ${item.context}</div>
-                    <div class="card-date">${item.displayDate}</div>
+                    <div class="card-date">📅 ${item.displayDate}</div>
                 </div>
                 <div class="card-body">${parsedContent}</div>
                 <div class="card-tags">
@@ -355,6 +377,7 @@
             listView.style.display = 'flex';
             listView.style.flexDirection = 'column';
             btns[1].classList.add('active');
+            if(tabName === 'list') renderCards(insights); // 전체 목록 다시 렌더링
         }
     }
 </script>
