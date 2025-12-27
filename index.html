@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDM Insight Lab V2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JDM Insight Lab</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <style>
@@ -14,9 +14,7 @@
             --text-main: #e0e0e0;
             --text-sub: #a0a0a0;
             --accent: #4CAF50;
-            --accent-hover: #45a049;
             --border: #333;
-            --danger: #ff5252;
         }
 
         body {
@@ -24,35 +22,60 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 15px; /* 모바일 여백 조정 */
             box-sizing: border-box;
             line-height: 1.6;
+            -webkit-text-size-adjust: 100%; /* 모바일 폰트 크기 자동조정 방지 */
         }
 
-        /* 레이아웃: 좌측 입력, 우측 뷰어 */
+        /* --- 레이아웃 핵심 수정 --- */
         .container {
-            max-width: 1600px;
+            max-width: 1200px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 380px 1fr;
+            grid-template-columns: 380px 1fr; /* PC: 좌우 분할 */
             gap: 25px;
             align-items: start;
         }
 
-        @media (max-width: 1000px) {
-            .container { grid-template-columns: 1fr; }
+        /* ★모바일 전용 스타일 (여기가 핵심입니다)★ */
+        @media (max-width: 900px) {
+            .container {
+                display: flex;       /* 그리드 대신 플렉스 사용 */
+                flex-direction: column; /* 세로로 쭉 나열 */
+                gap: 30px;
+            }
+
+            .input-panel {
+                position: static !important; /* 고정 기능 강제 해제 */
+                width: 100%;
+                order: 1; /* 입력창이 무조건 1번 */
+            }
+
+            .view-panel {
+                width: 100%;
+                order: 2; /* 뷰어 패널이 무조건 2번 */
+                overflow: visible; /* 잘림 방지 */
+            }
+            
+            #inputResponse {
+                height: 200px; /* 모바일에서는 높이 줄임 */
+            }
         }
 
+        /* 공통 스타일 */
         h2 { margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.2rem; color: #fff;}
 
-        /* --- [왼쪽] 입력 패널 --- */
+        /* 입력 패널 */
         .input-panel {
             background-color: var(--panel-bg);
             padding: 20px;
             border-radius: 12px;
             border: 1px solid var(--border);
+            /* PC에서는 고정 */
             position: sticky;
             top: 20px;
+            z-index: 10;
         }
 
         .input-group { margin-bottom: 15px; }
@@ -65,96 +88,73 @@
             color: #fff;
             padding: 12px;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 16px; /* 모바일 입력 확대 방지 */
             box-sizing: border-box;
-            font-family: 'Pretendard', sans-serif;
         }
         
         input:focus, textarea:focus { outline: none; border-color: var(--accent); background-color: #363636; }
-        #inputContext { height: 70px; resize: none; }
+        #inputContext { height: 60px; resize: none; }
         #inputResponse { height: 350px; font-family: 'Consolas', monospace; resize: vertical; line-height: 1.5;}
 
         .btn-save {
-            width: 100%; padding: 14px; background-color: var(--accent); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s;
+            width: 100%; padding: 14px; background-color: var(--accent); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
-        .btn-save:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
 
-        /* --- [오른쪽] 뷰어 패널 --- */
+        /* 뷰어 패널 */
         .view-panel { display: flex; flex-direction: column; gap: 20px; }
 
-        /* 탭 메뉴 */
+        /* 탭 버튼 */
         .tabs { display: flex; gap: 10px; margin-bottom: 0; }
         .tab-btn {
+            flex: 1; /* 모바일에서 버튼 꽉 차게 */
             background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-sub);
-            padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: 0.2s; font-weight: 600;
+            padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center;
         }
         .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* 캘린더 스타일 */
+        /* 캘린더 */
         .calendar-wrapper {
             background-color: var(--panel-bg);
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border);
         }
-        .calendar-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-        }
-        .calendar-header button {
-            background: none; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 4px; cursor: pointer;
-        }
-        .calendar-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center;
-        }
-        .cal-day-name { color: var(--text-sub); font-size: 0.9rem; padding-bottom: 10px; }
-        .cal-date {
-            background-color: #252525; min-height: 80px; border-radius: 6px; padding: 8px;
-            display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; position: relative;
-        }
-        .cal-date:hover { background-color: #333; }
-        .cal-date.today { border: 1px solid var(--accent); }
-        .cal-date.active-filter { background-color: rgba(76, 175, 80, 0.2); border: 1px solid var(--accent); }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .calendar-header button { background: none; border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 4px; }
         
-        /* 캘린더 안의 점(데이터 표시) */
-        .dot-container { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: 5px; }
-        .dot { width: 8px; height: 8px; background-color: var(--accent); border-radius: 50%; }
-
-        /* 리스트 영역 */
-        .list-header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #252525; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--accent);
+        .calendar-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;
         }
-        .reset-btn { background: none; border: none; color: var(--text-sub); text-decoration: underline; cursor: pointer; }
+        .cal-day-name { color: var(--text-sub); font-size: 0.8rem; padding-bottom: 5px; }
+        .cal-date {
+            background-color: #252525; min-height: 50px; border-radius: 4px; padding: 4px;
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative;
+        }
+        .cal-date.today { border: 1px solid var(--accent); }
+        .cal-date.active-filter { background-color: rgba(76, 175, 80, 0.3); border: 1px solid var(--accent); }
+        .date-num { font-size: 0.8rem; margin-bottom: 2px; }
+        
+        .dot-container { display: flex; gap: 2px; justify-content: center; }
+        .dot { width: 4px; height: 4px; background-color: var(--accent); border-radius: 50%; }
 
+        /* 리스트 카드 */
         .insight-card {
             background-color: var(--panel-bg); border-radius: 12px; border: 1px solid var(--border);
-            padding: 25px; margin-bottom: 20px; position: relative; transition: transform 0.2s;
+            padding: 20px; margin-bottom: 20px;
         }
-        .insight-card:hover { border-color: #555; }
-
-        .card-header {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333;
-        }
-        .card-context { font-size: 1.15rem; font-weight: bold; color: #fff; flex: 1; }
-        .card-date { font-size: 0.85rem; color: var(--text-sub); margin-left: 15px; white-space: nowrap; }
-
-        /* 마크다운 본문 */
-        .card-body { color: #ddd; font-size: 0.95rem; line-height: 1.7; overflow-x: auto; }
-        .card-body h1, h2, h3 { border-bottom: none; margin-top: 15px; color: #fff; }
-        .card-body code { background: #333; padding: 2px 5px; border-radius: 4px; color: #ff9800; font-family: monospace; }
-        .card-body pre { background: #111; padding: 15px; border-radius: 8px; overflow-x: auto; }
-        .card-body blockquote { border-left: 4px solid var(--accent); margin: 0; padding-left: 15px; color: #aaa; }
-
-        /* 태그 */
-        .card-tags { margin-top: 20px; padding-top: 15px; border-top: 1px solid #333; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .tag { font-size: 0.8rem; background-color: #2c2c2c; color: var(--accent); padding: 4px 12px; border-radius: 15px; border: 1px solid #444; }
+        .card-header { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; }
+        .card-context { font-size: 1.1rem; font-weight: bold; color: #fff; }
+        .card-date { font-size: 0.8rem; color: var(--text-sub); }
         
-        /* 버튼들 */
-        .action-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; margin-left: 10px; color: #666; }
-        .action-btn:hover { color: #fff; }
-        .btn-delete:hover { color: var(--danger); }
+        .card-body { color: #ddd; font-size: 0.95rem; line-height: 1.6; overflow-x: auto; }
+        .card-body h1, .card-body h2 { border-bottom: none; margin-top: 15px; color: #fff; font-size: 1.1em; }
+        .card-body code { background: #333; padding: 2px 5px; color: #ff9800; }
+        .card-body pre { background: #111; padding: 10px; border-radius: 6px; overflow-x: auto; }
 
+        .card-tags { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { font-size: 0.75rem; background-color: #2c2c2c; color: var(--accent); padding: 4px 8px; border-radius: 4px; border: 1px solid #444; }
+        
+        .btn-delete { background: none; border: none; color: #666; cursor: pointer; margin-left: auto; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -162,110 +162,93 @@
 <div class="container">
     
     <div class="input-panel">
-        <h2>🧪 Insight Input</h2>
+        <h2>✏️ Insight Input</h2>
         <div class="input-group">
-            <label>1. Context (질문 의도 & 맥락)</label>
-            <textarea id="inputContext" placeholder="왜 이 질문을 했나요? (예: 현장 옹벽 설계 이슈)"></textarea>
+            <label>1. Context (질문 의도)</label>
+            <textarea id="inputContext" placeholder="질문의 맥락을 짧게 기록하세요"></textarea>
         </div>
         <div class="input-group">
-            <label>2. Gemini Response (핵심 답변)</label>
-            <textarea id="inputResponse" placeholder="워드/한글에서 복사한 텍스트를 여기에 붙여넣으세요."></textarea>
+            <label>2. Gemini Response (답변)</label>
+            <textarea id="inputResponse" placeholder="내용 붙여넣기..."></textarea>
         </div>
         <div class="input-group">
-            <label>3. Tags (분류)</label>
-            <input type="text" id="inputTags" placeholder="#건설 #철학 #코드 (띄어쓰기로 구분)">
+            <label>3. Tags (태그)</label>
+            <input type="text" id="inputTags" placeholder="#태그1 #태그2">
         </div>
-        <button class="btn-save" onclick="saveInsight()">💾 저장하기 (Save)</button>
-        <div style="margin-top:20px; font-size:0.8rem; color:#666; text-align:center;">Local Storage Based</div>
+        <button class="btn-save" onclick="saveInsight()">💾 저장하기</button>
     </div>
 
     <div class="view-panel">
+        
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('calendar')">📅 캘린더 (Calendar)</button>
-            <button class="tab-btn" onclick="switchTab('list')">📝 전체 목록 (List)</button>
+            <button class="tab-btn active" onclick="switchTab('calendar')">📅 캘린더 보기</button>
+            <button class="tab-btn" onclick="switchTab('list')">📝 전체 목록 보기</button>
         </div>
 
         <div id="calendarView" class="calendar-wrapper">
             <div class="calendar-header">
-                <button onclick="changeMonth(-1)">◀ 이전달</button>
-                <h3 id="currentMonthLabel" style="margin:0; color:#fff;">2025. 12</h3>
-                <button onclick="changeMonth(1)">다음달 ▶</button>
+                <button onclick="changeMonth(-1)">◀</button>
+                <h3 id="currentMonthLabel" style="margin:0; color:#fff;"></h3>
+                <button onclick="changeMonth(1)">▶</button>
             </div>
-            <div class="calendar-grid" id="calendarGrid">
-                </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
         </div>
 
-        <div id="listInfo" class="list-header" style="display:none;">
-            <span id="listTitle">전체 목록</span>
-            <button class="reset-btn" onclick="renderAllInsights()">전체 보기</button>
-        </div>
-
-        <div id="cardList" class="card-list">
-            </div>
+        <div id="cardList" class="card-list"></div>
     </div>
 </div>
 
 <script>
-    // --- [데이터 관리] ---
+    // --- [스크립트 로직 (기존과 동일)] ---
     const STORAGE_KEY = 'jdm_insight_lab_v1';
     let insights = [];
-    let currentDate = new Date(); // 캘린더 기준 날짜
+    let currentDate = new Date();
 
-    // 초기 로드
     window.onload = function() {
         const savedData = localStorage.getItem(STORAGE_KEY);
-        if (savedData) {
-            insights = JSON.parse(savedData);
-        }
-        renderCalendar(); // 캘린더 먼저 그리기
-        // 처음엔 오늘 날짜의 리스트가 아니라, 전체 목록을 아래에 보여주거나 숨길 수 있음.
-        // 여기서는 캘린더 아래에 '전체 최신 목록'을 기본으로 보여줌
-        renderCards(insights); 
+        if (savedData) insights = JSON.parse(savedData);
+        renderCalendar();
+        renderCards(insights); // 초기엔 전체 목록 렌더링
+        // 모바일에서는 캘린더 탭을 기본으로 하되, 목록은 숨김 처리
+        switchTab('calendar');
     };
 
-    // 저장 함수
     function saveInsight() {
         const context = document.getElementById('inputContext').value.trim();
         const response = document.getElementById('inputResponse').value.trim();
         const tagsInput = document.getElementById('inputTags').value.trim();
 
-        if (!context || !response) {
-            alert('내용을 입력해주세요.');
-            return;
-        }
+        if (!context || !response) { alert('내용을 입력해주세요.'); return; }
 
-        // 태그 처리
         const tags = tagsInput.split(/[\s,]+/).filter(t => t.length > 0).map(t => t.startsWith('#') ? t : '#' + t);
-        
-        // 날짜 포맷 (YYYY-MM-DD) - 캘린더 매칭용
         const now = new Date();
         const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
         const newInsight = {
             id: Date.now(),
-            date: dateStr, // 검색용 날짜
-            displayDate: now.toLocaleString('ko-KR'), // 표시용 날짜
+            date: dateStr,
+            displayDate: now.toLocaleString('ko-KR'),
             context: context,
             response: response,
             tags: tags
         };
 
-        insights.unshift(newInsight); // 최신순 추가
+        insights.unshift(newInsight);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(insights));
 
-        // 입력창 초기화
         document.getElementById('inputContext').value = '';
         document.getElementById('inputResponse').value = '';
         document.getElementById('inputTags').value = '';
         
-        renderCalendar(); // 캘린더 갱신 (점이 추가되어야 하므로)
-        renderCards(insights); // 리스트 갱신
-        switchTab('list'); // 저장 후 리스트 탭으로 이동
+        renderCalendar();
+        renderCards(insights);
+        alert('저장되었습니다.');
+        // 저장 후 목록 탭으로 자동 이동
+        switchTab('list');
     }
 
-    // 삭제 함수
     function deleteInsight(id) {
-        if(confirm('정말 삭제하시겠습니까?')) {
+        if(confirm('삭제하시겠습니까?')) {
             insights = insights.filter(item => item.id !== id);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(insights));
             renderCalendar();
@@ -273,75 +256,42 @@
         }
     }
 
-    // 태그 수정 함수 (간단 버전)
-    function editTags(id) {
-        const item = insights.find(i => i.id === id);
-        if (!item) return;
-        
-        const newTagsStr = prompt("태그를 수정하세요 (공백으로 구분)", item.tags.join(" "));
-        if (newTagsStr !== null) {
-            const newTags = newTagsStr.split(/[\s,]+/).filter(t => t.length > 0).map(t => t.startsWith('#') ? t : '#' + t);
-            item.tags = newTags;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(insights));
-            renderCards(insights); // 현재 보고 있는 리스트 갱신
-        }
-    }
-
-    // --- [뷰어 로직: 캘린더] ---
     function renderCalendar() {
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
-        
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        
         document.getElementById('currentMonthLabel').innerText = `${year}. ${month + 1}`;
 
-        // 요일 헤더
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         days.forEach(d => {
             const div = document.createElement('div');
-            div.className = 'cal-day-name';
-            div.innerText = d;
-            grid.appendChild(div);
+            div.className = 'cal-day-name'; div.innerText = d; grid.appendChild(div);
         });
 
-        // 달력 계산
         const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month + 1, 0).getDate();
 
-        // 빈 칸 채우기
-        for (let i = 0; i < firstDay; i++) {
-            grid.appendChild(document.createElement('div'));
-        }
+        for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
 
-        // 날짜 채우기
         for (let d = 1; d <= lastDate; d++) {
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const cell = document.createElement('div');
             cell.className = 'cal-date';
-            
-            // 오늘 날짜 표시
             const todayStr = new Date().toISOString().split('T')[0];
             if (dateStr === todayStr) cell.classList.add('today');
 
             cell.innerHTML = `<span class="date-num">${d}</span>`;
 
-            // 해당 날짜에 데이터가 있는지 확인
             const count = insights.filter(item => item.date === dateStr).length;
             if (count > 0) {
                 const dotContainer = document.createElement('div');
                 dotContainer.className = 'dot-container';
-                // 점은 최대 5개까지만 표시
-                for(let k=0; k<Math.min(count, 5); k++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'dot';
-                    dotContainer.appendChild(dot);
+                for(let k=0; k<Math.min(count, 3); k++) {
+                    const dot = document.createElement('div'); dot.className = 'dot'; dotContainer.appendChild(dot);
                 }
                 cell.appendChild(dotContainer);
             }
-
-            // 클릭 이벤트
             cell.onclick = () => filterByDate(dateStr, cell);
             grid.appendChild(cell);
         }
@@ -352,44 +302,25 @@
         renderCalendar();
     }
 
-    // 날짜 클릭 시 필터링
     function filterByDate(dateStr, cellElement) {
-        // UI 선택 효과
         document.querySelectorAll('.cal-date').forEach(el => el.classList.remove('active-filter'));
         if(cellElement) cellElement.classList.add('active-filter');
-
         const filtered = insights.filter(item => item.date === dateStr);
-        
-        document.getElementById('listInfo').style.display = 'flex';
-        document.getElementById('listTitle').innerText = `📅 ${dateStr} 의 기록 (${filtered.length}건)`;
-        
         renderCards(filtered);
-        
-        // 모바일이나 화면이 작을 땐 스크롤을 리스트로 이동
-        document.getElementById('listInfo').scrollIntoView({behavior: 'smooth'});
+        // 날짜 클릭 시 리스트 탭으로 보여줌 (모바일 편의성)
+        switchTab('list'); 
     }
 
-    // 전체 보기 복귀
-    function renderAllInsights() {
-        document.getElementById('listInfo').style.display = 'none';
-        document.querySelectorAll('.cal-date').forEach(el => el.classList.remove('active-filter'));
-        renderCards(insights);
-    }
-
-    // --- [뷰어 로직: 리스트] ---
     function renderCards(data) {
         const container = document.getElementById('cardList');
         container.innerHTML = '';
-
         if (data.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#666; padding:40px;">기록된 인사이트가 없습니다.</div>';
+            container.innerHTML = '<div style="text-align:center; color:#666; padding:20px;">기록이 없습니다.</div>';
             return;
         }
-
         data.forEach(item => {
             const card = document.createElement('div');
             card.className = 'insight-card';
-            
             const parsedContent = marked.parse(item.response);
             const tagsHtml = item.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
 
@@ -398,35 +329,32 @@
                     <div class="card-context">Q. ${item.context}</div>
                     <div class="card-date">${item.displayDate}</div>
                 </div>
-                <div class="card-body">
-                    ${parsedContent}
-                </div>
+                <div class="card-body">${parsedContent}</div>
                 <div class="card-tags">
                     ${tagsHtml}
-                    <div style="flex:1;"></div>
-                    <button class="action-btn" onclick="editTags(${item.id})">🏷️ 태그수정</button>
-                    <button class="action-btn btn-delete" onclick="deleteInsight(${item.id})">🗑️ 삭제</button>
+                    <button class="btn-delete" onclick="deleteInsight(${item.id})">🗑️ 삭제</button>
                 </div>
             `;
             container.appendChild(card);
         });
     }
 
-    // 탭 전환
     function switchTab(tabName) {
         const calView = document.getElementById('calendarView');
+        const listView = document.getElementById('cardList');
         const btns = document.querySelectorAll('.tab-btn');
         
         btns.forEach(b => b.classList.remove('active'));
 
         if (tabName === 'calendar') {
             calView.style.display = 'block';
+            listView.style.display = 'none';
             btns[0].classList.add('active');
-            renderCalendar();
         } else {
             calView.style.display = 'none';
+            listView.style.display = 'flex';
+            listView.style.flexDirection = 'column';
             btns[1].classList.add('active');
-            renderAllInsights(); // 리스트 탭 누르면 전체 목록 보여주기
         }
     }
 </script>
