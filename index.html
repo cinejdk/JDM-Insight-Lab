@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JDM Insight Lab v3.2</title>
+    <title>JDM Insight Lab v3.4</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -29,13 +29,17 @@
         .tab-content { display: none; animation: fadeIn 0.3s ease; } .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 로그인 */
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
         #loginOverlay input { width: 220px; padding: 15px; font-size: 1.5rem; text-align: center; border-radius: 12px; border: none; margin-top: 10px; letter-spacing: 5px; }
         #loginOverlay button { margin-top: 20px; padding: 12px 40px; background: var(--accent-color); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
 
-        /* 캘린더 */
+        /* 캘린더 스타일 */
         .calendar-wrapper { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; z-index: 20; }
+        /* 화살표 버튼 강화: z-index 및 터치 영역 확대 */
+        .nav-arrow-btn { border: none; background: transparent; font-size: 2rem; cursor: pointer; color: var(--primary-color); padding: 5px 20px; z-index: 30; user-select: none; }
+        .nav-arrow-btn:active { opacity: 0.5; transform: scale(0.95); }
+        
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); width: 100%; }
         .day-header { text-align: center; font-size: 0.9rem; color: #555; padding: 12px 0; font-weight: 600; background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0; }
         .day-header:nth-child(7n) { border-right: none; }
@@ -47,6 +51,9 @@
         .cal-day.today { background: #e8f5e9; }
         .cal-day.today .day-num { background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.85rem; }
         .cal-day.has-memo .day-num { font-weight: bold; text-decoration: underline; text-underline-offset: 3px; }
+        /* 선택된 날짜 강조 */
+        .cal-day.selected-day { background: #fff3e0; box-shadow: inset 0 0 0 2px #ff9800; }
+        
         .day-num { margin-bottom: 2px; }
         .holiday-name { font-size: 0.7rem; color: var(--holiday-color); font-weight: bold; margin-bottom: 2px; text-align: center; word-break: keep-all; line-height: 1.1; }
         .cal-day.sun .day-num, .cal-day.holiday .day-num { color: var(--holiday-color); }
@@ -61,7 +68,7 @@
             .more-items { font-size: 0.75rem; color: #888; text-align: right; margin-top: 2px; }
         }
 
-        /* 카드 */
+        /* 기타 스타일 */
         .memo-card { background: var(--card-bg); padding: 20px; border-radius: 16px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; cursor: pointer; }
         .memo-card.selected { border: 2px solid var(--accent-color); background: #f1f8e9; }
         .check-circle { position: absolute; top: 15px; right: 15px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ddd; background: white; display: none; }
@@ -69,7 +76,6 @@
         .memo-card.selected .check-circle { background: var(--accent-color); border-color: var(--accent-color); }
         .memo-card.selected .check-circle::after { content: '✔'; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; }
 
-        /* 입력 폼 */
         input, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; background: #fff; }
         textarea.markdown-editor { width: 100%; min-height: 300px; padding: 14px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; font-family: 'Consolas', monospace; line-height: 1.6; resize: vertical; background: #fafafa; }
         textarea.markdown-editor:focus { border-color: var(--accent-color); outline: none; background: #fff; }
@@ -77,22 +83,30 @@
         .tag-select-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; padding: 5px 0; }
         .tag-chip-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid #ddd; background: #f8f9fa; color: #555; font-size: 0.9rem; cursor: pointer; }
         .tag-chip-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); font-weight: bold; }
-
         .card-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-left: auto; justify-content: flex-end;}
         .mini-tag { font-size: 0.75rem; background: #e8f5e9; color: var(--accent-color); padding: 2px 8px; border-radius: 12px; font-weight: bold; border: 1px solid #c8e6c9; }
 
-        /* 링크 & 파일 첨부 */
+        .btn-save { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        
         .link-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
         .link-row input { margin-bottom: 0; flex-grow: 1; }
         .btn-del-link { background: #e74c3c; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; flex-shrink: 0; }
         .btn-add-link { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; margin-bottom: 15px; display: inline-block; }
-        
         .file-input-wrapper { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 10px; background: #fafafa; cursor: pointer; margin-bottom: 15px; transition: 0.2s; }
-        .file-input-wrapper:hover { border-color: var(--accent-color); background: #f1f8e9; }
         .file-list-display { font-size: 0.9rem; color: #555; text-align: left; margin-top: 10px; }
         
-        /* 버튼 */
-        .btn-save { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .attachment-section { margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; }
+        .attach-item { display: flex; align-items: center; gap: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; text-decoration: none; color: #333; }
+        .img-preview-box { margin-top: 10px; text-align: center; background: #222; padding: 10px; border-radius: 8px; }
+        .img-preview-box img { max-width: 100%; border-radius: 4px; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height); background: white; display: flex; border-top: 1px solid #eee; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; text-align: center; padding: 10px; color: #999; font-size: 0.75rem; cursor: pointer; }
+        .nav-item.active { color: var(--accent-color); font-weight: bold; }
+        .nav-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+        
+        #bulkDeleteBar { position: fixed; bottom: var(--nav-height); left: 0; width: 100%; background: #e74c3c; color: white; padding: 15px; text-align: center; font-weight: bold; cursor: pointer; display: none; z-index: 900; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        
         .search-bar-area { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .search-row { display: flex; gap: 5px; align-items: center; width: 100%; }
         .search-row select, .search-row input { flex-grow: 1; margin-bottom: 0; }
@@ -101,37 +115,15 @@
         .btn-select-mode.active { background: var(--accent-color); }
         .date-filter-row { display: flex; gap: 5px; align-items: center; }
         
-        /* 뷰어 */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
         .modal-content { background:white; width:90%; max-width:600px; padding:30px; border-radius:20px; max-height:85vh; overflow-y:auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .close-btn { font-size: 2rem; border: none; background: none; cursor: pointer; color: #aaa; line-height: 1; margin-left: 10px;}
         
         .view-body { line-height: 1.7; font-size: 1.05rem; color: #333; }
-        .view-body h1, .view-body h2 { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 20px; }
         .view-body code { background: #f1f1f1; padding: 2px 5px; border-radius: 4px; color: #e83e8c; font-family: monospace; }
         .view-body pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 15px 0; }
         .view-body blockquote { border-left: 4px solid var(--accent-color); margin: 0; padding-left: 15px; color: #777; background: #f9f9f9; }
         
-        /* 첨부파일 뷰어 스타일 */
-        .attachment-section { margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; }
-        .attachment-label { font-size: 0.9rem; font-weight: bold; color: #666; margin-bottom: 10px; display: block; }
-        .attach-item { display: flex; align-items: center; gap: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; text-decoration: none; color: #333; transition: 0.2s; }
-        .attach-item:hover { background: #e8f5e9; border-color: #c8e6c9; }
-        .attach-icon { font-size: 1.2rem; }
-        .attach-name { font-weight: bold; font-size: 0.9rem; flex-grow: 1; word-break: break-all; }
-        
-        .img-preview-box { margin-top: 10px; text-align: center; background: #222; padding: 10px; border-radius: 8px; }
-        .img-preview-box img { max-width: 100%; border-radius: 4px; }
-
-        /* 하단 내비 */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height); background: white; display: flex; border-top: 1px solid #eee; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { flex: 1; text-align: center; padding: 10px; color: #999; font-size: 0.75rem; cursor: pointer; }
-        .nav-item.active { color: var(--accent-color); font-weight: bold; }
-        .nav-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
-        
-        #bulkDeleteBar { position: fixed; bottom: var(--nav-height); left: 0; width: 100%; background: #e74c3c; color: white; padding: 15px; text-align: center; font-weight: bold; cursor: pointer; display: none; z-index: 900; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        
-        /* 태그 매니저 */
         .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .tag-item { background: #f1f3f5; padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
         .tag-del-btn { color: #e74c3c; font-weight: bold; cursor: pointer; margin-left: 5px; }
@@ -149,16 +141,16 @@
 </div>
 
 <header>
-    <h1>JDM Insight Lab v3.2</h1>
+    <h1>JDM Insight Lab v3.4</h1>
     <button onclick="changePassword()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; padding:5px; color:rgba(255,255,255,0.8);">🔒</button>
 </header>
 
 <div class="container">
     <div id="tab-calendar" class="tab-content active">
-        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); padding:15px; border-radius:12px; margin-bottom:15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:1.5rem; cursor:pointer; color:var(--primary-color);">◀</button>
+        <div class="calendar-header">
+            <button class="nav-arrow-btn" onclick="changeMonth(-1)">◀</button>
             <h2 id="currentMonth" style="margin:0; font-size:1.3rem; color:var(--primary-color);"></h2>
-            <button onclick="changeMonth(1)" style="border:none; background:none; font-size:1.5rem; cursor:pointer; color:var(--primary-color);">▶</button>
+            <button class="nav-arrow-btn" onclick="changeMonth(1)">▶</button>
         </div>
         <div class="calendar-wrapper">
             <div id="calendarGrid" class="calendar-grid"></div>
@@ -170,7 +162,7 @@
         <div class="search-bar-area">
             <div class="search-row">
                 <button class="icon-btn btn-tag-config" onclick="openTagManager()" title="태그 관리">⚙️</button>
-                <button class="icon-btn btn-select-mode" id="selectModeBtn" onclick="toggleSelectMode()" title="선택 모드 (삭제)">✅</button>
+                <button class="icon-btn btn-select-mode" id="selectModeBtn" onclick="toggleSelectMode()" title="선택 모드">✅</button>
                 <select id="listFilter" onchange="renderMemos()">
                     <option value="all">전체보기</option>
                 </select>
@@ -179,9 +171,9 @@
                 <input type="text" id="searchInput" placeholder="검색 (내용, 태그)" onkeyup="renderMemos()">
             </div>
             <div class="date-filter-row">
-                <input type="date" id="filterStartDate" onchange="renderMemos()" title="시작일">
+                <input type="date" id="filterStartDate" onchange="renderMemos()">
                 <span>~</span>
-                <input type="date" id="filterEndDate" onchange="renderMemos()" title="종료일">
+                <input type="date" id="filterEndDate" onchange="renderMemos()">
             </div>
         </div>
         <div id="memoList"></div>
@@ -193,36 +185,28 @@
                 <h3 style="margin:0; color:var(--accent-color);">✏️ 새 인사이트</h3>
                 <button onclick="switchTab('calendar')" style="border:none; background:none; font-size:2rem; cursor:pointer; color:#aaa; line-height:1;">×</button>
             </div>
-            
             <label style="font-size:0.85rem; color:#666; font-weight:bold;">1. Context (질문 의도)</label>
             <input type="text" id="inputTitle" placeholder="왜 이 질문을 했나요?">
-            
             <div style="margin-bottom:12px;">
                 <label style="font-size:0.85rem; color:#666; font-weight:bold;">2. Date (날짜)</label>
                 <input type="date" id="inputDate" style="margin-bottom:0;">
             </div>
-            
             <div style="margin-bottom:12px;">
                 <label style="font-size:0.85rem; color:#666; font-weight:bold;">3. Tags (분류)</label>
                 <div id="inputTagContainer" class="tag-select-container"></div>
             </div>
-            
             <label style="font-size:0.85rem; color:#666; font-weight:bold;">4. Gemini Response</label>
             <textarea id="inputContent" class="markdown-editor" placeholder="답변을 여기에 붙여넣으세요. (Markdown 지원)"></textarea>
-            
-            <label style="font-size:0.85rem; color:#666; font-weight:bold; display:block; margin-top:15px;">관련 링크 (구글드라이브 등)</label>
+            <label style="font-size:0.85rem; color:#666; font-weight:bold; display:block; margin-top:15px;">관련 링크</label>
             <div id="inputLinkContainer"></div>
             <button class="btn-add-link" onclick="addLinkField('inputLinkContainer')">+ 링크 추가</button>
-
-            <label style="font-size:0.85rem; color:#666; font-weight:bold; display:block; margin-top:15px;">📎 파일 첨부 (PDF/이미지)</label>
+            <label style="font-size:0.85rem; color:#666; font-weight:bold; display:block; margin-top:15px;">📎 파일 첨부</label>
             <div class="file-input-wrapper" onclick="document.getElementById('inputFile').click()">
                 <div style="font-size:2rem; color:#aaa;">☁️</div>
-                <div style="font-weight:bold; color:#555;">여기를 클릭하여 파일 선택</div>
-                <div style="font-size:0.8rem; color:#999;">대화 전체 PDF, 현장 사진 등 (10MB 이하 권장)</div>
+                <div style="font-weight:bold; color:#555;">클릭하여 파일 선택</div>
                 <input type="file" id="inputFile" multiple style="display:none;" onchange="updateFileList(this)">
             </div>
             <div id="fileListDisplay" class="file-list-display"></div>
-
             <button class="btn-save" style="margin-top:20px;" onclick="saveNewMemo()">💾 저 장 하 기</button>
         </div>
     </div>
@@ -241,41 +225,8 @@
 </div>
 
 <div id="bulkDeleteBar" onclick="deleteSelectedMemos()">🗑️ 선택 삭제 (<span id="selectedCount">0</span>)</div>
-
-<div id="tagManagerModal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <h2 style="margin:0;">⚙️ 태그 관리</h2>
-            <button class="close-btn" onclick="closeTagManager()">×</button>
-        </div>
-        <div id="tagListDisplay" class="tag-list"></div>
-        <div style="display:flex; gap:5px;"><input type="text" id="newTagInput" placeholder="#새태그"><button class="btn-save" onclick="addNewTag()" style="padding:10px; width:auto;">추가</button></div>
-    </div>
-</div>
-
-<div id="viewModal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:15px;">
-            <div style="display:flex; flex-direction:column; gap:5px;">
-                <div id="viewTagList" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
-                <span id="viewDate" style="color:#888; font-size:0.95rem;"></span>
-            </div>
-            <div>
-                <input type="hidden" id="viewIdHidden">
-                <button onclick="deleteFromView()" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-weight:bold; margin-right:10px;">삭제</button>
-                <button class="close-btn" onclick="closeViewModal()">×</button>
-            </div>
-        </div>
-        <h2 id="viewTitle" style="margin-top:0; color:#2c3e50; line-height:1.3;"></h2>
-        <div id="viewBody" class="view-body"></div>
-        
-        <div id="viewLink" style="margin-top:20px;"></div>
-        <div id="viewAttachments" class="attachment-section" style="display:none;">
-            <span class="attachment-label">📎 첨부 파일 (클릭하여 열기)</span>
-            <div id="attachList"></div>
-        </div>
-    </div>
-</div>
+<div id="tagManagerModal" class="modal"><div class="modal-content"><div style="display:flex;justify-content:space-between;margin-bottom:15px;"><h2 style="margin:0;">⚙️ 태그 관리</h2><button class="close-btn" onclick="closeTagManager()">×</button></div><div id="tagListDisplay" class="tag-list"></div><div style="display:flex;gap:5px;"><input type="text" id="newTagInput" placeholder="#새태그"><button class="btn-save" onclick="addNewTag()" style="padding:10px;width:auto;">추가</button></div></div></div>
+<div id="viewModal" class="modal"><div class="modal-content"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px;border-bottom:1px solid #eee;padding-bottom:15px;"><div style="display:flex;flex-direction:column;gap:5px;"><div id="viewTagList" style="display:flex;gap:5px;flex-wrap:wrap;"></div><span id="viewDate" style="color:#888;font-size:0.95rem;"></span></div><div><input type="hidden" id="viewIdHidden"><button onclick="deleteFromView()" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-weight:bold;margin-right:10px;">삭제</button><button class="close-btn" onclick="closeViewModal()">×</button></div></div><h2 id="viewTitle" style="margin-top:0;color:#2c3e50;line-height:1.3;"></h2><div id="viewBody" class="view-body"></div><div id="viewLink" style="margin-top:20px;"></div><div id="viewAttachments" class="attachment-section" style="display:none;"><span class="attachment-label">📎 첨부 파일</span><div id="attachList"></div></div></div></div>
 
 <nav class="bottom-nav">
     <div class="nav-item active" onclick="switchTab('calendar')"><span class="nav-icon">📅</span>홈</div>
@@ -285,16 +236,28 @@
 </nav>
 
 <script>
-    const DB_NAME = 'InsightDB_v3'; 
-    const STORE_NAME = 'insights';
+    const DB_NAME = 'InsightDB_v3'; const STORE_NAME = 'insights';
     let db;
     let currDate = new Date();
     let myTags = JSON.parse(localStorage.getItem('insightTags')) || ['#건설실무','#철학','#코드','#음악','#개인사'];
     let isSelectionMode = false;
     let selectedIds = new Set();
     let inputSelectedTags = new Set();
-    const HOLIDAYS = {'2025-01-01':'신정','2025-01-28':'설날','2025-01-29':'설날','2025-01-30':'설날','2025-03-01':'삼일절','2025-05-05':'어린이날','2025-05-06':'석가탄신일','2025-06-06':'현충일','2025-08-15':'광복절','2025-10-03':'개천절','2025-10-05':'추석','2025-10-06':'추석','2025-10-07':'추석','2025-10-09':'한글날','2025-12-25':'성탄절'};
+    let currentSelectedDateKey = null; // 선택된 날짜 (상태 저장)
 
+    // [2026년 공휴일 업데이트 완료]
+    const HOLIDAYS = {
+        '2025-01-01':'신정','2025-01-28':'설날','2025-01-29':'설날','2025-01-30':'설날','2025-03-01':'삼일절','2025-05-05':'어린이날','2025-05-06':'석가탄신일','2025-06-06':'현충일','2025-08-15':'광복절','2025-10-03':'개천절','2025-10-05':'추석','2025-10-06':'추석','2025-10-07':'추석','2025-10-09':'한글날','2025-12-25':'성탄절',
+        '2026-01-01':'신정', '2026-02-16':'설날 연휴', '2026-02-17':'설날', '2026-02-18':'설날 연휴',
+        '2026-03-01':'삼일절', '2026-03-02':'대체공휴일(삼일절)',
+        '2026-05-05':'어린이날', '2026-05-24':'부처님오신날', '2026-05-25':'대체공휴일(부처님오신날)',
+        '2026-06-03':'지방선거', '2026-06-06':'현충일',
+        '2026-08-15':'광복절', '2026-08-17':'대체공휴일(광복절)',
+        '2026-09-24':'추석 연휴', '2026-09-25':'추석', '2026-09-26':'추석 연휴',
+        '2026-10-03':'개천절', '2026-10-05':'대체공휴일(개천절)',
+        '2026-10-09':'한글날', '2026-12-25':'성탄절'
+    };
+    
     function getPassword() { return localStorage.getItem('appPass') || "0403"; }
     function checkPass() { if(document.getElementById('passInput').value === getPassword()) { document.getElementById('loginOverlay').style.display = 'none'; } else { alert('틀렸습니다.'); } }
     function changePassword() { const cur = prompt("현재 비밀번호:"); if(cur!==getPassword()) return alert("틀렸습니다."); const newP = prompt("새 비밀번호:"); if(newP) { localStorage.setItem('appPass', newP); alert("변경 완료."); } }
@@ -305,29 +268,105 @@
 
     function initApp() { updateTagSelects(); document.getElementById('inputDate').value = new Date().toISOString().substring(0, 10); addLinkField('inputLinkContainer'); renderCalendar(); renderMemos(); }
 
-    // --- 파일 처리 로직 ---
     function updateFileList(input) {
         const display = document.getElementById('fileListDisplay');
         if(input.files.length > 0) {
-            let names = [];
-            for(let i=0; i<input.files.length; i++) names.push(`📄 ${input.files[i].name}`);
-            display.innerText = names.join('\n');
-            display.style.color = "#2c3e50";
-        } else {
-            display.innerText = "";
-        }
+            let names = []; for(let i=0; i<input.files.length; i++) names.push(`📄 ${input.files[i].name}`);
+            display.innerText = names.join('\n'); display.style.color = "#2c3e50";
+        } else { display.innerText = ""; }
     }
-    
     function readFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve({ name: file.name, type: file.type, data: reader.result });
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
+            reader.onerror = reject; reader.readAsDataURL(file);
         });
     }
 
-    // --- 저장 로직 ---
+    // --- [캘린더 로직 수정: 날짜 계산 및 목록 갱신] ---
+    function changeMonth(delta) {
+        // 날짜를 1일로 고정하고 월을 변경하여, 31일 등 끝날짜에서 발생하는 버그 방지
+        currDate = new Date(currDate.getFullYear(), currDate.getMonth() + delta, 1);
+        renderCalendar();
+    }
+
+    async function renderCalendar() {
+        const y = currDate.getFullYear(), m = currDate.getMonth();
+        document.getElementById('currentMonth').innerText = `${y}년 ${m+1}월`;
+        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+        
+        const days = ['일','월','화','수','목','금','토'];
+        days.forEach((d, i) => grid.innerHTML += `<div class="day-header ${i===0?'sun':''} ${i===6?'sat':''}">${d}</div>`);
+        
+        const first = new Date(y, m, 1).getDay();
+        const last = new Date(y, m + 1, 0).getDate();
+        for(let i=0; i<first; i++) grid.innerHTML += `<div></div>`;
+        
+        const memos = await getAll();
+        
+        for(let d=1; d<=last; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayMemos = memos.filter(m => m.dateStr === dateStr);
+            const holiday = HOLIDAYS[dateStr];
+            
+            let extraClass = '';
+            const dow = new Date(y,m,d).getDay();
+            if(dow===0) extraClass += ' sun'; else if(dow===6) extraClass += ' sat';
+            if(holiday) extraClass += ' holiday';
+            if(currentSelectedDateKey === dateStr) extraClass += ' selected-day';
+
+            const div = document.createElement('div');
+            div.className = 'cal-day' + extraClass + (dayMemos.length>0 ? ' has-memo' : '');
+            if(dateStr === new Date().toISOString().substring(0,10)) div.classList.add('today');
+
+            let pcEvents = '';
+            dayMemos.slice(0, 3).forEach(m => { pcEvents += `<div class="cal-event-item" onclick="event.stopPropagation(); openViewModal(${m.id})">${m.title}</div>`; });
+            if(dayMemos.length > 3) pcEvents += `<div class="more-items">+${dayMemos.length - 3}</div>`;
+
+            const holidayHtml = holiday ? `<div class="holiday-name">${holiday}</div>` : '';
+            div.innerHTML = `<span class="day-num">${d}</span>${holidayHtml}${dayMemos.length>0?'<div class="dot"></div>':''}<div class="cal-events-pc">${pcEvents}</div>`;
+            
+            if(dayMemos.length > 0) div.onclick = () => showDayMemos(dateStr, memos);
+            else div.onclick = () => { document.getElementById('inputDate').value = dateStr; switchTab('write'); };
+
+            grid.appendChild(div);
+        }
+
+        // [핵심] 목록 표시 로직: 현재 보고 있는 달력에 선택된 날짜가 포함되어 있을 때만 목록을 보여줌
+        const listContainer = document.getElementById('calendarMemos');
+        if (currentSelectedDateKey) {
+            const [selY, selM] = currentSelectedDateKey.split('-').map(Number);
+            // 현재 달력(y, m+1)과 선택된 날짜(selY, selM)가 일치하는지 확인
+            if (selY === y && selM === m + 1) {
+                const targetMemos = memos.filter(m => m.dateStr === currentSelectedDateKey);
+                renderBottomList(currentSelectedDateKey, targetMemos);
+            } else {
+                listContainer.innerHTML = ''; // 다른 달이면 목록 숨김 (초기화 효과)
+            }
+        } else {
+            listContainer.innerHTML = '';
+        }
+    }
+
+    function showDayMemos(dateStr, memos) {
+        currentSelectedDateKey = dateStr; // 선택 상태 저장
+        renderCalendar(); // 달력 재렌더링 (선택효과 및 목록 표시)
+    }
+
+    function renderBottomList(dateStr, targetMemos) {
+        const box = document.getElementById('calendarMemos');
+        let html = `<div style="text-align:left; background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+            <h3 style="margin:0 0 15px 0; font-size:1.1rem; color:var(--primary-color); border-bottom:2px solid var(--accent-color); padding-bottom:8px;">📅 ${dateStr}</h3>`;
+        targetMemos.forEach(m => {
+             html += `<div onclick="openViewModal(${m.id})" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
+                <div style="font-weight:bold; color:#333;">Q. ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</div>
+            </div>`;
+        });
+        html += `</div>`;
+        box.innerHTML = html;
+        box.scrollIntoView({behavior:'smooth'});
+    }
+
     async function saveNewMemo() {
         const title = document.getElementById('inputTitle').value;
         const content = document.getElementById('inputContent').value;
@@ -335,88 +374,42 @@
         const links = collectLinks('inputLinkContainer');
         const dateVal = document.getElementById('inputDate').value;
         const fileInput = document.getElementById('inputFile');
-
         if(!title || !content) return alert('맥락과 답변을 입력해주세요.');
-
-        // 파일 처리
         let attachments = [];
         if(fileInput.files.length > 0) {
             for(let i=0; i<fileInput.files.length; i++) {
-                if(fileInput.files[i].size > 10 * 1024 * 1024) {
-                    alert(`[주의] ${fileInput.files[i].name} 파일이 10MB를 초과합니다. 구글 드라이브 링크 사용을 권장합니다.`);
-                }
-                const fileData = await readFile(fileInput.files[i]);
-                attachments.push(fileData);
+                if(fileInput.files[i].size > 10 * 1024 * 1024) alert(`[주의] ${fileInput.files[i].name} 10MB 초과`);
+                attachments.push(await readFile(fileInput.files[i]));
             }
         }
-        
         const store = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME);
-        store.add({
-            id: Date.now(),
-            dateStr: dateVal,
-            title: title,
-            tags: tags,
-            content: content,
-            links: links,
-            attachments: attachments // 파일 데이터 저장
-        }).onsuccess = () => {
+        store.add({ id: Date.now(), dateStr: dateVal, title: title, tags: tags, content: content, links: links, attachments: attachments }).onsuccess = () => {
             alert('저장되었습니다!');
-            document.getElementById('inputTitle').value = "";
-            document.getElementById('inputContent').value = "";
-            document.getElementById('inputFile').value = "";
-            document.getElementById('fileListDisplay').innerText = "";
-            document.getElementById('inputLinkContainer').innerHTML = "";
-            addLinkField('inputLinkContainer');
-            inputSelectedTags.clear();
-            updateTagSelects();
-            switchTab('calendar'); 
+            document.getElementById('inputTitle').value = ""; document.getElementById('inputContent').value = ""; document.getElementById('inputFile').value = ""; document.getElementById('fileListDisplay').innerText = ""; document.getElementById('inputLinkContainer').innerHTML = ""; addLinkField('inputLinkContainer'); inputSelectedTags.clear(); updateTagSelects(); switchTab('calendar'); 
         };
     }
-
-    // --- 뷰어 로직 (파일 표시 포함) ---
+    
     async function openViewModal(id) {
         const m = await new Promise(r => db.transaction(STORE_NAME).objectStore(STORE_NAME).get(id).onsuccess = e => r(e.target.result));
         if(!m) return;
-        document.getElementById('viewIdHidden').value = m.id;
-        document.getElementById('viewTitle').innerText = "Q. " + m.title;
-        document.getElementById('viewDate').innerText = m.dateStr;
+        document.getElementById('viewIdHidden').value = m.id; document.getElementById('viewTitle').innerText = "Q. " + m.title; document.getElementById('viewDate').innerText = m.dateStr;
         document.getElementById('viewTagList').innerHTML = (m.tags||[]).map(t => `<span class="mini-tag" style="background:var(--accent-color); color:white;">${t}</span>`).join('');
         document.getElementById('viewBody').innerHTML = marked.parse(m.content);
-        
-        // 링크
         const links = m.links || [];
         document.getElementById('viewLink').innerHTML = links.map((l,i) => `<a href="${l}" target="_blank" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:5px; border-radius:8px; text-decoration:none; color:#2980b9; font-weight:bold;">🔗 관련 링크 ${i+1}</a>`).join('');
-
-        // 첨부파일
-        const attachBox = document.getElementById('viewAttachments');
-        const attachList = document.getElementById('attachList');
-        attachList.innerHTML = '';
-        
+        const attachBox = document.getElementById('viewAttachments'); const attachList = document.getElementById('attachList'); attachList.innerHTML = '';
         if(m.attachments && m.attachments.length > 0) {
             attachBox.style.display = 'block';
             m.attachments.forEach(file => {
                 const isImg = file.type.startsWith('image/');
-                let icon = isImg ? '🖼️' : '📄';
-                let html = `<a href="${file.data}" download="${file.name}" class="attach-item">
-                    <span class="attach-icon">${icon}</span>
-                    <span class="attach-name">${file.name}</span>
-                    <span style="font-size:0.8rem; color:#888;">다운로드</span>
-                </a>`;
-                
-                // 이미지는 미리보기 추가
-                if(isImg) {
-                    html += `<div class="img-preview-box"><img src="${file.data}"></div>`;
-                }
+                let html = `<a href="${file.data}" download="${file.name}" class="attach-item"><span class="attach-icon">${isImg?'🖼️':'📄'}</span><span class="attach-name">${file.name}</span><span style="font-size:0.8rem;color:#888;">다운로드</span></a>`;
+                if(isImg) html += `<div class="img-preview-box"><img src="${file.data}"></div>`;
                 attachList.innerHTML += html;
             });
-        } else {
-            attachBox.style.display = 'none';
-        }
-        
+        } else { attachBox.style.display = 'none'; }
         document.getElementById('viewModal').style.display = 'flex';
     }
 
-    // --- 기타 기능 (이전과 동일) ---
     function openTagManager(){renderTagListModal();document.getElementById('tagManagerModal').style.display='flex'}
     function closeTagManager(){document.getElementById('tagManagerModal').style.display='none'}
     function renderTagListModal(){document.getElementById('tagListDisplay').innerHTML=myTags.map(t=>`<span class="tag-item">${t} <span class="tag-del-btn" onclick="removeTag('${t}')">×</span></span>`).join('')}
@@ -433,12 +426,10 @@
     function deleteSelectedMemos(){if(!confirm('삭제?'))return;const tx=db.transaction(STORE_NAME,'readwrite');selectedIds.forEach(id=>tx.objectStore(STORE_NAME).delete(id));tx.oncomplete=()=>{toggleSelectMode();renderMemos();renderCalendar()}}
     function switchTab(t){window.scrollTo(0,0);document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');const tabs=['calendar','list','write','data'];document.querySelectorAll('.nav-item')[tabs.indexOf(t)].classList.add('active');if(t==='list')renderMemos();if(t==='calendar'){currDate=new Date();renderCalendar()}}
     async function renderMemos(){const l=document.getElementById('memoList');l.innerHTML='';const memos=await getAll();const filter=document.getElementById('listFilter').value;const key=document.getElementById('searchInput').value.toLowerCase();const sVal=document.getElementById('filterStartDate').value;const eVal=document.getElementById('filterEndDate').value;memos.sort((a,b)=>b.dateStr.localeCompare(a.dateStr)||b.id-a.id);memos.forEach(m=>{if(filter!=='all'&&!(m.tags||[]).includes(filter))return;if(key&&!m.title.toLowerCase().includes(key)&&!m.content.toLowerCase().includes(key))return;if(sVal&&m.dateStr<sVal)return;if(eVal&&m.dateStr>eVal)return;const tagsHtml=(m.tags||[]).map(t=>`<span class="mini-tag">${t}</span>`).join(' ');const isSel=selectedIds.has(m.id);const clk=isSelectionMode?`toggleSelectCard(${m.id})`:`openViewModal(${m.id})`;l.innerHTML+=`<div class="memo-card ${isSel?'selected':''} ${isSelectionMode?'selection-mode':''}" onclick="${clk}"><div class="check-circle"></div><div style="display:flex;justify-content:space-between;color:#888;font-size:0.8rem;margin-bottom:5px;"><span>${m.dateStr}</span><div class="card-tags">${tagsHtml}</div></div><h3 style="color:#2c3e50;">Q. ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</h3><p>${m.content.substring(0,50)}...</p></div>`})}
-    async function renderCalendar(){const y=currDate.getFullYear(),m=currDate.getMonth();document.getElementById('currentMonth').innerText=`${y}년 ${m+1}월`;const g=document.getElementById('calendarGrid');g.innerHTML='';const days=['일','월','화','수','목','금','토'];days.forEach((d,i)=>g.innerHTML+=`<div class="day-header ${i===0?'sun':''} ${i===6?'sat':''}">${d}</div>`);const f=new Date(y,m,1).getDay(),l=new Date(y,m+1,0).getDate();for(let i=0;i<f;i++)g.innerHTML+=`<div></div>`;const memos=await getAll();for(let d=1;d<=l;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const dm=memos.filter(i=>i.dateStr===ds);const h=HOLIDAYS[ds];let ex='';const dow=new Date(y,m,d).getDay();if(dow===0)ex+=' sun';else if(dow===6)ex+=' sat';if(h)ex+=' holiday';const div=document.createElement('div');div.className='cal-day'+ex+(dm.length>0?' has-memo':'');if(ds===new Date().toISOString().substring(0,10))div.classList.add('today');let pe='';dm.slice(0,3).forEach(i=>{pe+=`<div class="cal-event-item" onclick="event.stopPropagation();openViewModal(${i.id})">${i.title}</div>`});if(dm.length>3)pe+=`<div class="more-items">+${dm.length-3}</div>`;div.innerHTML=`<span class="day-num">${d}</span>${h?`<div class="holiday-name">${h}</div>`:''}${dm.length>0?'<div class="dot"></div>':''}<div class="cal-events-pc">${pe}</div>`;if(dm.length>0)div.onclick=()=>showDayMemos(ds,memos);else div.onclick=()=>{document.getElementById('inputDate').value=ds;switchTab('write')};g.appendChild(div)}}
-    function showDayMemos(ds,ms){const t=ms.filter(m=>m.dateStr===ds);const b=document.getElementById('calendarMemos');let h=`<div style="text-align:left;background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1);"><h3 style="margin:0 0 15px 0;font-size:1.1rem;color:var(--primary-color);border-bottom:2px solid var(--accent-color);padding-bottom:8px;">📅 ${ds}</h3>`;t.forEach(m=>{h+=`<div onclick="openViewModal(${m.id})" style="padding:10px;border-bottom:1px solid #eee;cursor:pointer;"><div style="font-weight:bold;color:#333;">Q. ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</div></div>`});h+=`</div>`;b.innerHTML=h}
     function closeViewModal(){document.getElementById('viewModal').style.display='none'}
     function deleteFromView(){if(!confirm('삭제?'))return;const id=Number(document.getElementById('viewIdHidden').value);db.transaction(STORE_NAME,'readwrite').objectStore(STORE_NAME).delete(id).onsuccess=()=>{closeViewModal();renderCalendar();renderMemos()}}
     function getAll(){return new Promise(r=>db.transaction(STORE_NAME,'readonly').objectStore(STORE_NAME).getAll().onsuccess=e=>r(e.target.result))}
-    function backupData(){getAll().then(d=>{if(d.length==0)return alert('데이터 없음');const b=new Blob([JSON.stringify({version:"v3.2",insights:d,tags:myTags})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`Insight_Backup_${new Date().toISOString().slice(0,10)}.json`;a.click()})}
+    function backupData(){getAll().then(d=>{if(d.length==0)return alert('데이터 없음');const b=new Blob([JSON.stringify({version:"v3.4",insights:d,tags:myTags})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`Insight_Backup_${new Date().toISOString().slice(0,10)}.json`;a.click()})}
     function restoreData(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);const l=d.insights||d;if(d.tags){myTags=d.tags;saveTags()}const tx=db.transaction(STORE_NAME,'readwrite');l.forEach(i=>tx.objectStore(STORE_NAME).put(i));tx.oncomplete=()=>{alert('복원 완료');location.reload()}}catch(e){alert('파일 오류')}};r.readAsText(f)}
     function resetApp(){if(confirm('초기화?')){db.transaction(STORE_NAME,'readwrite').objectStore(STORE_NAME).clear().onsuccess=()=>{location.reload()}}}
 </script>
