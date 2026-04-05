@@ -118,6 +118,9 @@
         .btn-select-mode.active { background: var(--accent-color); }
         .date-filter-row { display: flex; gap: 5px; align-items: center; }
         
+        .type-filter-row { background: #fff; padding: 10px 15px; border-radius: 10px; border: 1px solid #ddd; justify-content: space-around; }
+        .type-filter-row label { font-size: 0.95rem; font-weight: bold; color: #2c3e50; display: flex; align-items: center; gap: 5px; }
+
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
         .modal-content { background:white; width:90%; max-width:600px; padding:25px; border-radius:20px; max-height:85vh; overflow-y:auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         
@@ -169,11 +172,15 @@
 
     <div id="tab-list" class="tab-content">
         <div class="search-bar-area">
+            <div class="search-row type-filter-row">
+                <label style="cursor:pointer;"><input type="checkbox" id="filterInsight" checked onchange="resetAndRenderMemos()"> 🤖 인사이트</label>
+                <label style="cursor:pointer;"><input type="checkbox" id="filterMemo" checked onchange="resetAndRenderMemos()"> 📝 일반 메모</label>
+            </div>
             <div class="search-row">
                 <button class="icon-btn btn-tag-config" onclick="openTagManager()" title="태그 관리">⚙️</button>
                 <button class="icon-btn btn-select-mode" id="selectModeBtn" onclick="toggleSelectMode()" title="선택 모드">✅</button>
                 <select id="listFilter" onchange="resetAndRenderMemos()">
-                    <option value="all">전체보기</option>
+                    <option value="all">전체보기 (태그)</option>
                 </select>
             </div>
             <div class="search-row">
@@ -320,10 +327,9 @@
     let inputSelectedTags = new Set();
     let currentSelectedDateKey = null;
     
-    // 추가된 상태 변수들
-    let editingId = null; // 수정 모드일 때 해당 ID 저장
-    let internalLinksData = []; // 작성 중인 내부 링크 배열 [{id, title}]
-    let listLimit = 20; // 페이징 변수
+    let editingId = null; 
+    let internalLinksData = []; 
+    let listLimit = 20; 
 
     const HOLIDAYS = {
         '2025-01-01':'신정','2025-01-28':'설날','2025-01-29':'설날','2025-01-30':'설날','2025-03-01':'삼일절','2025-05-05':'어린이날','2025-05-06':'석가탄신일','2025-06-06':'현충일','2025-08-15':'광복절','2025-10-03':'개천절','2025-10-05':'추석','2025-10-06':'추석','2025-10-07':'추석','2025-10-09':'한글날','2025-12-25':'성탄절',
@@ -405,7 +411,7 @@
             <h3 style="margin:0 0 15px 0; font-size:1.1rem; color:var(--primary-color); border-bottom:2px solid var(--accent-color); padding-bottom:8px;">📅 ${dateStr}</h3>`;
         targetMemos.forEach(m => {
              html += `<div onclick="openViewModal(${m.id})" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
-                <div style="font-weight:bold; color:#333;">${m.isMemo?'📝':'🤖'} ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</div>
+                <div style="font-weight:bold; color:#333;">${m.isMemo?'📝 [메모]':'🤖 [인사이트]'} ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</div>
             </div>`;
         });
         html += `</div>`;
@@ -456,10 +462,10 @@
         listDiv.innerHTML = '';
         const filtered = memos.filter(m => (m.id !== editingId) && (m.title.toLowerCase().includes(keyword) || m.content.toLowerCase().includes(keyword)));
         
-        filtered.slice(0, 50).forEach(m => { // 최대 50개만 보여줌
+        filtered.slice(0, 50).forEach(m => { 
             listDiv.innerHTML += `<div class="search-mini-item" onclick="addInternalLink(${m.id}, '${m.title.replace(/'/g, "\\'")}')">
                 <div style="color:#888; font-size:0.8rem;">${m.dateStr}</div>
-                <div style="font-weight:bold; color:#2c3e50;">${m.isMemo?'📝':'🤖'} ${m.title}</div>
+                <div style="font-weight:bold; color:#2c3e50;">${m.isMemo?'📝 [메모]':'🤖 [인사이트]'} ${m.title}</div>
             </div>`;
         });
     }
@@ -499,7 +505,6 @@
         
         if(!title || !content) return alert('제목(의도)과 내용을 입력해주세요.');
         
-        // 첨부파일 처리 (수정 모드일 때 파일이 새로 첨부되지 않으면 기존 파일 유지 로직 필요)
         let attachments = [];
         if(fileInput.files.length > 0) {
             for(let i=0; i<fileInput.files.length; i++) {
@@ -507,7 +512,6 @@
                 attachments.push(await readFile(fileInput.files[i]));
             }
         } else if (editingId) {
-            // 파일을 새로 안 올렸으면 기존 파일 유지
             const oldMemo = await getMemo(editingId);
             if(oldMemo && oldMemo.attachments) attachments = oldMemo.attachments;
         }
@@ -541,12 +545,13 @@
         const m = await getMemo(id);
         if(!m) return;
         document.getElementById('viewIdHidden').value = m.id; 
-        document.getElementById('viewTitle').innerText = (m.isMemo ? "📝 " : "🤖 Q. ") + m.title; 
+        // 2. 뷰어 타이틀에도 명시적 분류 표기 적용
+        const typePrefix = m.isMemo ? "📝 [메모] " : "🤖 [인사이트] Q. ";
+        document.getElementById('viewTitle').innerText = typePrefix + m.title; 
         document.getElementById('viewDate').innerText = m.dateStr;
         document.getElementById('viewTagList').innerHTML = (m.tags||[]).map(t => `<span class="mini-tag" style="background:var(--accent-color); color:white;">${t}</span>`).join('');
         document.getElementById('viewBody').innerHTML = marked.parse(m.content);
         
-        // 내부 링크 표시
         const inLinks = m.internalLinks || [];
         document.getElementById('viewInternalLinks').innerHTML = inLinks.map(lnk => 
             `<div onclick="openViewModal(${lnk.id})" style="background:#f3e5f5; padding:10px; margin-bottom:5px; border-radius:8px; color:#8e44ad; font-weight:bold; cursor:pointer;">
@@ -554,7 +559,6 @@
             </div>`
         ).join('');
 
-        // 외부 링크 표시
         const links = m.links || [];
         document.getElementById('viewLink').innerHTML = links.map((l,i) => `<a href="${l}" target="_blank" style="display:block; background:#f1f5f9; padding:10px; margin-bottom:5px; border-radius:8px; text-decoration:none; color:#2980b9; font-weight:bold;">🌐 외부 링크 ${i+1}</a>`).join('');
         
@@ -617,7 +621,7 @@
     function addNewTag(){const val=document.getElementById('newTagInput').value.trim();if(!val)return;if(!myTags.includes(val)){myTags.push(val);saveTags();document.getElementById('newTagInput').value='';renderTagListModal();updateTagSelects()}}
     function removeTag(tag){if(confirm('삭제?')){myTags=myTags.filter(t=>t!==tag);saveTags();renderTagListModal();updateTagSelects()}}
     function saveTags(){localStorage.setItem('insightTags',JSON.stringify(myTags))}
-    function updateTagSelects(){const opts=myTags.map(t=>`<option value="${t}">${t}</option>`).join('');const cur=document.getElementById('listFilter').value;document.getElementById('listFilter').innerHTML=`<option value="all">전체보기</option>`+opts;document.getElementById('listFilter').value=cur;renderTagSelector('inputTagContainer',inputSelectedTags)}
+    function updateTagSelects(){const opts=myTags.map(t=>`<option value="${t}">${t}</option>`).join('');const cur=document.getElementById('listFilter').value;document.getElementById('listFilter').innerHTML=`<option value="all">전체보기 (태그)</option>`+opts;document.getElementById('listFilter').value=cur;renderTagSelector('inputTagContainer',inputSelectedTags)}
     function renderTagSelector(cid,set){const c=document.getElementById(cid);c.innerHTML='';myTags.forEach(t=>{const b=document.createElement('span');b.className='tag-chip-btn'+(set.has(t)?' active':'');b.innerText=t;b.onclick=()=>{if(set.has(t))set.delete(t);else set.add(t);renderTagSelector(cid,set)};c.appendChild(b)})}
     
     function addLinkField(){const c=document.getElementById('inputLinkContainer');const d=document.createElement('div');d.className='link-row';d.innerHTML=`<input type="text" class="link-input" placeholder="https://..."><button class="btn-del-link" onclick="this.parentElement.remove()">×</button>`;c.appendChild(d)}
@@ -637,10 +641,10 @@
         document.querySelectorAll('.nav-item')[tabs.indexOf(t)].classList.add('active');
         if(t==='list') resetAndRenderMemos();
         if(t==='calendar'){currDate=new Date();renderCalendar()}
-        if(t==='write' && editingId===null) resetWriteForm(); // 새글 쓰기로 들어올 때 폼 초기화
+        if(t==='write' && editingId===null) resetWriteForm();
     }
 
-    // --- 목록 페이지네이션 (더보기) ---
+    // --- 목록 페이지네이션 및 필터링 로직 ---
     function resetAndRenderMemos() { listLimit = 20; renderMemosOnly(); }
     function loadMoreMemos() { listLimit += 20; renderMemosOnly(); }
     
@@ -652,9 +656,17 @@
         const sVal=document.getElementById('filterStartDate').value;
         const eVal=document.getElementById('filterEndDate').value;
         
+        // 1. 체크박스 필터링 상태 가져오기
+        const showInsight = document.getElementById('filterInsight').checked;
+        const showMemo = document.getElementById('filterMemo').checked;
+        
         memos.sort((a,b)=>b.dateStr.localeCompare(a.dateStr)||b.id-a.id);
         
         let filtered = memos.filter(m => {
+            // 2. 분류 조건 확인 (인사이트/메모 둘 중 하나라도 꺼져있으면 걸러냄)
+            if (m.isMemo && !showMemo) return false;
+            if (!m.isMemo && !showInsight) return false;
+
             if(filter!=='all'&&!(m.tags||[]).includes(filter)) return false;
             if(key&&!m.title.toLowerCase().includes(key)&&!m.content.toLowerCase().includes(key)) return false;
             if(sVal&&m.dateStr<sVal) return false;
@@ -668,10 +680,14 @@
             const tagsHtml=(m.tags||[]).map(t=>`<span class="mini-tag">${t}</span>`).join(' ');
             const isSel=selectedIds.has(m.id);
             const clk=isSelectionMode?`toggleSelectCard(${m.id})`:`openViewModal(${m.id})`;
+            
+            // 3. 리스트 카드 제목에 분류 표기 추가
+            const typePrefix = m.isMemo ? '[메모]' : '[인사이트]';
+            
             l.innerHTML+=`<div class="memo-card ${isSel?'selected':''} ${isSelectionMode?'selection-mode':''}" onclick="${clk}">
                 <div class="check-circle"></div>
                 <div style="display:flex;justify-content:space-between;color:#888;font-size:0.8rem;margin-bottom:5px;"><span>${m.dateStr}</span><div class="card-tags">${tagsHtml}</div></div>
-                <h3 style="color:#2c3e50; margin-top:5px;">${m.isMemo?'📝':'🤖'} ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</h3>
+                <h3 style="color:#2c3e50; margin-top:5px;">${m.isMemo?'📝':'🤖'} <span style="color:var(--accent-color);">${typePrefix}</span> ${m.title} ${m.attachments&&m.attachments.length>0?'📎':''}</h3>
                 <p style="color:#666;">${m.content.substring(0,50)}...</p>
             </div>`
         });
